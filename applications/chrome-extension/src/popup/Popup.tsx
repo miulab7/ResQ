@@ -11,7 +11,7 @@ export default function Popup() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     await saveToStorage();
-    const message = (!personalInfo.fullName || !personalInfo.affiliation || !personalInfo.email)
+    const message = (!personalInfo.fullName || !personalInfo.affiliation || !personalInfo.email || !personalInfo.language || !personalInfo.role)
       ? 'ユーザー情報が不足しています。'
       : '設定を保存しました！';
     alert(message);
