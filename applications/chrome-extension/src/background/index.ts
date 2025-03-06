@@ -131,7 +131,9 @@ function openReplyEditorWindow(request: ChromeMessage) {
   const windowData: WindowCreateData = {
     url: 'app/features/reply-editor/pages/reply-editor.html',
     type: 'popup',
-    state: 'fullscreen'
+    state: 'normal',
+    width: 1000,
+    height: 1200
   };
 
   chrome.windows.create(windowData, window => {
@@ -177,7 +179,7 @@ chrome.runtime.onMessage.addListener((request: ChromeMessage, sender: ChromeMess
           const settingsWindow: WindowCreateData = {
             type: 'popup',
             url: 'popup/popup.html',
-            width: 800,
+            width: 400,
             height: 600
           };
           chrome.windows.create(settingsWindow);
