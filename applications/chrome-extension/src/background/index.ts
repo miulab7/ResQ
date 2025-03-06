@@ -171,7 +171,9 @@ chrome.runtime.onMessage.addListener((request: ChromeMessage, sender: ChromeMess
 
         if (!state.personalInformation.fullName ||
             !state.personalInformation.affiliation ||
-            !state.personalInformation.email) {
+            !state.personalInformation.email ||
+            !state.personalInformation.language ||
+            !state.personalInformation.role) {
           const settingsWindow: WindowCreateData = {
             type: 'popup',
             url: 'popup/popup.html',
