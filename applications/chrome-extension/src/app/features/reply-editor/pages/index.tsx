@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { MailProvider } from '../../../contexts/MailContext';
 import { PersonalInfoProvider } from '../../../contexts/PersonalInfoContext';
 import { ReplyEditorPage } from './ReplyEditorPage';
-import '../../../global.css';
+import '../../../../global.css';
 
 const container = document.getElementById('root');
 if (!container) {

@@ -129,7 +129,7 @@ async function checkTabExists(tabId: number): Promise<boolean> {
 
 function openReplyEditorWindow(request: ChromeMessage) {
   const windowData: WindowCreateData = {
-    url: 'popup/pages/reply-editor.html',
+    url: 'app/features/reply-editor/pages/reply-editor.html',
     type: 'popup',
     state: 'fullscreen'
   };
@@ -174,7 +174,7 @@ chrome.runtime.onMessage.addListener((request: ChromeMessage, sender: ChromeMess
             !state.personalInformation.email) {
           const settingsWindow: WindowCreateData = {
             type: 'popup',
-            url: 'popup/pages/settings.html',
+            url: 'popup/popup.html',
             width: 800,
             height: 600
           };
