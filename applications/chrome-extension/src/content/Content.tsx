@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
+import { createRoot } from 'react-dom/client';
 
 interface MailContent {
   text: string;
@@ -42,7 +43,7 @@ const Content: React.FC = () => {
   };
 
   // 返信ボタンクリック時の処理
-  const handleReplyClick = (event: MouseEvent) => {
+  const processReplyClick = (event: MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
 
@@ -64,11 +65,20 @@ const Content: React.FC = () => {
     });
   };
 
+  const handleReplyClickReact = (event: React.MouseEvent<HTMLDivElement>) => {
+    processReplyClick(event.nativeEvent);
+  };
+
+  const handleReplyClickNative = (event: Event) => {
+    const mouseEvent = event as MouseEvent;
+    processReplyClick(mouseEvent);
+  };
+
   // 返信ボタンにイベントリスナーを追加する関数
   const addReplyButtonListener = () => {
     const replyButtons = document.querySelectorAll('[role="button"][data-tooltip*="返信"]');
     replyButtons.forEach(button => {
-      button.addEventListener('click', handleReplyClick as EventListener);
+      button.addEventListener('click', handleReplyClickNative);
     });
   };
 
@@ -120,8 +130,67 @@ const Content: React.FC = () => {
       chrome.runtime.onMessage.removeListener(messageListener);
     };
   }, []);
+// AIボタンを作成する関数
+const createAIButton = useCallback(() => {
+  const buttonContainer = document.createElement('td');
+  buttonContainer.className = 'td-aiButton';
+  buttonContainer.style.padding = '0 4px';
 
-  return null; // このコンポーネントは表示要素を持ちません
+  // ボタンのルート要素を作成
+  const root = createRoot(buttonContainer);
+
+  // Reactボタンコンポーネントをレンダリング
+  root.render(
+    <div
+      className="T-I J-J5-Ji aoO v T-I-atl L3"
+      role="button"
+      tabIndex={1}
+      aria-label="Reply with AI"
+      style={{
+        userSelect: 'none',
+        cursor: 'pointer',
+        fontSize: '14px',
+        padding: '0 16px',
+        minWidth: '56px',
+        maxWidth: '500px',
+        height: '32px',
+        lineHeight: '32px',
+        textAlign: 'center',
+        borderRadius: '4px',
+        backgroundColor: '#0b57d0',
+        color: '#fff',
+      }}
+      onClick={handleReplyClickReact}
+    >
+      Reply with AI
+    </div>
+  );
+
+  return buttonContainer;
+}, [handleReplyClickReact]);
+
+// AIボタンを追加するMutationObserver
+useEffect(() => {
+  const observer = new MutationObserver(() => {
+    const buttonContainers = document.querySelectorAll('tr.btC');
+    buttonContainers.forEach(container => {
+      if (container && !container.querySelector('.td-aiButton')) {
+        const aiButton = createAIButton();
+        // ゴミ箱アイコンの前に挿入
+        const trashTd = container.querySelector('.a0z');
+        if (trashTd) {
+          container.insertBefore(aiButton, trashTd);
+        }
+      }
+    });
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  return () => observer.disconnect();
+}, [createAIButton]);
+
+return null;
 };
 
 export default Content;
