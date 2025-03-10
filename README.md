@@ -103,10 +103,10 @@ ResQ/
    - [AWS Lambdaの料金](https://aws.amazon.com/jp/lambda/pricing/)
    - [Amazon ECRの料金](https://aws.amazon.com/jp/ecr/pricing/)
 
-> [!Important]
-> 本ドキュメントの手順に従ってデプロイを実行した結果、予期しない課金が発生した場合でも、当方は一切の責任を負いかねますので、あらかじめご了承ください。
-
    デプロイ先のリージョンは、デフォルトで `ap-northeast-1` に設定されているため、変更したい方は `terraform/provider.tf` と `.github/workflows/deploy.yml`の該当箇所を変更してください。
+
+> [!Caution]
+> 本ドキュメントの手順に従ってデプロイを実行した結果、予期しない課金が発生した場合でも、当方は一切の責任を負いかねますので、あらかじめご了承ください。
 
 2. GitHub リポジトリの Secrets 設定
 
