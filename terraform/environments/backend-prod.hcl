@@ -1,5 +1,5 @@
-bucket         = "resq-backend-terraform-state"
+bucket         = "resq-app-backend-terraform-state"
 key            = "environments/prod/terraform.tfstate"
 region         = "ap-northeast-1"
-dynamodb_table = "resq-backend-terraform-state-lock"
+dynamodb_table = "resq-app-backend-terraform-state-lock"
 encrypt        = true
