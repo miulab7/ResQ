@@ -44,4 +44,4 @@ services:
     tty: true
     entrypoint: bash
     volumes:
-      - ../../terraform:/home/resq-terraform
+      - ../../terraform:/home/trailblazer/resq-terraform
