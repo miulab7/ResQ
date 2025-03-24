@@ -49,8 +49,7 @@ async def generate_questions(request: QuestionGenerationRequest) -> StreamingRes
     chat_service: ChatService = ChatService(prompt_directory=pathlib.Path("data"))
     return StreamingResponse(
         chat_service.generate_questions_stream(question_input),
-        # media_type="text/event-stream",
-        media_type="application/json",
+        media_type="text/event-stream",
     )
 
 
@@ -76,6 +75,5 @@ async def generate_reply(request: ReplyGenerationRequest) -> StreamingResponse:
     chat_service: ChatService = ChatService(prompt_directory=pathlib.Path("data"))
     return StreamingResponse(
         chat_service.generate_reply_stream(reply_input),
-        # media_type="text/event-stream",
-        media_type="application/json",
+        media_type="text/event-stream",
     )
