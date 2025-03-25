@@ -94,6 +94,7 @@ resource "aws_lambda_function" "app" {
 # Lambda Function URL with configurable CORS
 resource "aws_lambda_function_url" "app" {
   function_name      = aws_lambda_function.app.function_name
+  invoke_mode = "RESPONSE_STREAM"
   authorization_type = "NONE"
 
   cors {
