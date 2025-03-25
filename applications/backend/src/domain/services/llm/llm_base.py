@@ -80,7 +80,7 @@ class LLMBase(ABC, Generic[InputDomainModel, OutputDomainModel]):
                     {"role": "system", "content": self._system_prompt},
                     {"role": "user", "content": input_message},
                 ],
-                response_format={"type": "json_object"},
+                # response_format={"type": "json_object"},
                 stream=True,
                 stream_options={"include_usage": True},
             )

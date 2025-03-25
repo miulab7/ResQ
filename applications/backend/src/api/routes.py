@@ -7,6 +7,7 @@ from fastapi.responses import StreamingResponse
 from src.api.schemas import (
     HealthCheckResponse,
     QuestionGenerationRequest,
+    QuestionGenerationResponse,
     ReplyGenerationRequest,
 )
 from src.domain.models import (
@@ -30,15 +31,15 @@ async def health_check() -> Any:
     return {"status": "ok"}
 
 
-@router.post("/questions")
-async def generate_questions(request: QuestionGenerationRequest) -> StreamingResponse:
+@router.post("/questions", response_model=QuestionGenerationResponse)
+async def generate_questions(request: QuestionGenerationRequest) -> Any:
     """Generate questions based on the mail information.
 
     Args:
         request (QuestionGenerationRequest): The request for generating questions.
 
     Returns:
-        StreamingResponse: The generated question.
+        Any: The generated questions.
     """
     # Convert request to domain model
     question_input = QuestionGenerationInput(
@@ -47,10 +48,8 @@ async def generate_questions(request: QuestionGenerationRequest) -> StreamingRes
     )
 
     chat_service: ChatService = ChatService(prompt_directory=pathlib.Path("data"))
-    return StreamingResponse(
-        chat_service.generate_questions_stream(question_input),
-        media_type="text/event-stream",
-    )
+    questions_json = await chat_service.generate_questions(question_input)
+    return QuestionGenerationResponse.model_validate_json(questions_json)
 
 
 @router.post("/reply")

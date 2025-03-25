@@ -21,19 +21,18 @@ class ChatService:
         self._question_generation_llm = QuestionGenerationLLM(prompt_directory)
         self._reply_generation_llm = ReplyGenerationLLM(prompt_directory)
 
-    async def generate_questions_stream(
+    async def generate_questions(
         self, input: QuestionGenerationInput
-    ) -> AsyncGenerator[str, None]:
+    ) -> str:
         """Generate questions based on the mail information.
 
         Args:
             input (QuestionGenerationInput): The input for generating questions.
 
-        Yields:
+        Returns:
             str: The generated question.
         """
-        async for content in self._question_generation_llm.astream(input):
-            yield content
+        return await self._question_generation_llm.acompletion(input)
 
     async def generate_reply_stream(
         self, input: ReplyGenerationInput

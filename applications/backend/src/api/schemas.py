@@ -67,3 +67,30 @@ class ReplyGenerationRequest(BaseModel):
         str | None, Field(None, description="Current reply content when editing")
     ]
     api_key: Annotated[SecretStr, Field(..., description="OpenAI API key")]
+
+class QuestionItem(BaseModel):
+    """Question item model.
+
+    Attributes:
+        id (str): The unique identifier of the question
+        question (str): The question text
+        choices (list[str]): Available choices for the question
+        corresponding_part (str): The part of the email that corresponds to this question
+    """
+
+    id: Annotated[str, Field(..., description="The unique identifier of the question")]
+    question: Annotated[str, Field(..., description="The question text")]
+    choices: Annotated[list[str], Field(..., description="Available choices for the question")]
+    corresponding_part: Annotated[
+        str, Field(..., description="The part of the email that corresponds to this question")
+    ]
+
+
+class QuestionGenerationResponse(BaseModel):
+    """Question generation response model.
+
+    Attributes:
+        questions (list[QuestionItem]): List of generated questions
+    """
+
+    questions: Annotated[list[QuestionItem], Field(..., description="List of generated questions")]
