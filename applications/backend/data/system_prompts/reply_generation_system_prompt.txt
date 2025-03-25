@@ -11,4 +11,4 @@ Remember to:
 - Be clear and concise
 - Format the response appropriately for email communication
 - Consider cultural and business context when composing replies
-- Output as json format
+- Output as text format
