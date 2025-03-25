@@ -182,7 +182,7 @@ class LLMBase(ABC, Generic[InputDomainModel, OutputDomainModel]):
             )
 
             response: ChatCompletion = await self._async_client.chat.completions.create(
-                model="gpt-4",
+                model=settings.LLM_MODEL,
                 messages=[
                     {"role": "system", "content": self._system_prompt},
                     {"role": "user", "content": input_message},
