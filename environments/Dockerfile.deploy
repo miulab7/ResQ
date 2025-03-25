@@ -12,6 +12,7 @@ ARG RUN_UV_SYNC_AT_BUILD_TIME="false"
 # UV requires a cache directory, but AWS Lambda's home directory is read-only.
 # Therefore, the cache directory is set to `/tmp/uv/cache`, which is a writable directory provided by the Lambda system.
 # `AWS_LWA_READINESS_CHECK_PATH` specifies the endpoint used for the health check of the AWS Lambda web adapter.
+# `AWS_LWA_INVOKE_MODE` specifies the mode of the AWS Lambda web adapter. This should match the `invoke_mode` setting of "aws_lambda_function_url"
 # in the `terraform/lambda/main.tf` file.
 ENV DEBIAN_FRONTEND="noninteractive" \
     LC_ALL="C.UTF-8" \
