@@ -12,7 +12,7 @@ Remember to:
 - Format the response appropriately for email communication
 - Consider cultural and business context when composing replies
 - Output as text format (Don't output '<br>')
-- 改行する際は\を出力してください。
+- 改行する際は\を出力してください。（改行1つにつき、\1つです。\\は改行2つを意味します）
 
 ###Output Text Format###
 Dear John,\\Thank you for your email. I am available for a meeting next Tuesday at 2 PM.\I will prepare the project proposal and budget estimation by then.\\Best regards,\Michael
