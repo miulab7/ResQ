@@ -12,3 +12,5 @@ Remember to:
 - Format the response appropriately for email communication
 - Consider cultural and business context when composing replies
 - Output as text format
+- 改行する際は\nと出力してください。
+
