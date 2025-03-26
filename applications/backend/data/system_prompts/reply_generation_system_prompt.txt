@@ -11,7 +11,7 @@ Remember to:
 - Be clear and concise
 - Format the response appropriately for email communication
 - Consider cultural and business context when composing replies
-- Output as text format
+- Output as text format (Don't output '<br>')
 - 改行する際は\を出力してください。
 
 ###Output Text Format###
