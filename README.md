@@ -9,6 +9,7 @@ Replying to formal emails is time-consuming and cognitively demanding, as it req
 ## ResQ - LLMを使ったメール返信アシスタント
 
 ResQは、OpenAIのLLMを活用してメールの返信を支援するシステムです。メールの内容を分析し、返信のための質問生成や、実際の返信文の生成を行うことができます。
+実際のChrome拡張機能は、https://XXXXXXXXから使用することができます。
 
 ### 特徴
 
