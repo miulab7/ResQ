@@ -10,4 +10,14 @@ Please follow these rules:
 - If you need to insert two line breaks, use two backslashes \\.
 
 ###Sample Output Example###
-Dear John,\\Thank you for your email. I am available for a meeting next Tuesday at 2 PM.\I will prepare the project proposal and budget estimation by then.\\Best regards,\\------------------------------------------\Michael\michael@example.com\------------------------------------------
+Dear John,
+
+Thank you for your email. I am available for a meeting next Tuesday at 2 PM.
+I will prepare the project proposal and budget estimation by then.
+
+Best regards,
+
+------------------------------------------
+Michael
+michael@example.com
+------------------------------------------
