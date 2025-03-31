@@ -19,6 +19,7 @@ Replying to formal emails is time-consuming and cognitively demanding, as it req
 ResQ is a system that leverages OpenAI’s Large Language Models to assist with email replies. It analyzes the incoming email’s content, generates questions to support your reply, and then produces a draft response based on your answers.
 The Chrome extension is available for installation from this [Link](https://chromewebstore.google.com/detail/diibecmhllgfkglodjgifjapchbanimk?utm_source=item-share-cb).
 
+
 ### Features
 
 - 💬 **Interactive Question Generation**  
