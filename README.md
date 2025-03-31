@@ -1,5 +1,13 @@
 # Understanding and Supporting Formal Email Exchange by Answering AI-Generated Questions
 
+[![Ascender Supported](https://img.shields.io/badge/Supported%20by-Ascender-blue)](https://github.com/cvpaperchallenge/Ascender)
+[![arXiv](https://img.shields.io/badge/arXiv-2502.03804-b31b1b.svg)](https://arxiv.org/abs/2502.03804)
+[![ACM CHI 2025](https://img.shields.io/badge/CHI-2025-ff69b4.svg)](https://dl.acm.org/doi/abs/10.1145/3706598.3714016)
+
+![Teaser Image](docs/images/teaser.gif)
+
+> **Note**: A Japanese version of this README is available [here](./README_ja.md).
+
 The repository contains the code that accompanies our CHI 2025 paper.
 
 ## Abstract
