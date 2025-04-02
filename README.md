@@ -6,7 +6,8 @@
 
 ![Teaser Image](docs/images/teaser.gif)
 
-> **Note**: A Japanese version of this README is available [here](./README_ja.md).
+> [!Note] 
+> A Japanese version of this README is available [here](./README_ja.md).
 
 The repository contains the code that accompanies our CHI 2025 paper.
 
