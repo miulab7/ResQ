@@ -24,10 +24,8 @@ The Chrome extension is available for installation from this [Link](https://chro
 
 - 💬 **Interactive Question Generation**  
   ResQ analyzes the incoming email and automatically generates short, focused questions to clarify the content or request additional details needed for the reply.
-  
 - ✍️ **Context-Aware Draft Generation**  
   Based on your answers and the context extracted from the original email, ResQ composes a concise and well-structured reply draft.
-  
 - 🚀 **Streaming Response**  
   The system streams the generated content in real time, allowing you to watch the reply take shape and refine it quickly.
 
@@ -89,9 +87,9 @@ This guide outlines how to quickly spin up ResQ with Docker Compose for local us
 
    Then open the newly created `backend.env` file and specify the necessary environment variables.
 
-   > [!Note]
-   > `OPENAI_API_KEY` should be set to the API key you generated in the OpenAI [Dashboard](https://platform.openai.com/api-keys).
-   > `CORS_ALLOW_ORIGINS` should include the origin(s) that are allowed to connect to the backend (e.g., http://localhost:3000 if you are testing locally).
+> [!Note]
+> `OPENAI_API_KEY` should be set to the API key you generated in the OpenAI [Dashboard](https://platform.openai.com/api-keys).
+> `CORS_ALLOW_ORIGINS` should include the origin(s) that are allowed to connect to the backend (e.g., http://localhost:3000 if you are testing locally).
 
 3. **Run Docker Containers**
    ```bash
