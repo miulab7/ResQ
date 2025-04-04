@@ -123,3 +123,17 @@ ResQ/
 ## Acknowledgements
 
 We thank the [Ascender](https://github.com/cvpaperchallenge/Ascender) for making this work possible.
+
+## Citation
+
+```bibtex
+@misc{miura2025understandingsupportingformalemail,
+      title={Understanding and Supporting Formal Email Exchange by Answering AI-Generated Questions},
+      author={Yusuke Miura and Chi-Lan Yang and Masaki Kuribayashi and Keigo Matsumoto and Hideaki Kuzuoka and Shigeo Morishima},
+      year={2025},
+      eprint={2502.03804},
+      archivePrefix={arXiv},
+      primaryClass={cs.HC},
+      url={https://arxiv.org/abs/2502.03804},
+}
+```
