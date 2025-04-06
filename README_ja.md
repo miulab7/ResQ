@@ -32,34 +32,46 @@ ResQは、OpenAIのLLMを活用してメールの返信を支援するシステ�
 
 各サービスの詳細については、`docs/`内にある各サービスのドキュメントを参照してください。
 
+> [!Important]
+> 論文執筆時に使用したフロントエンドのコードは、現在リファクタリング中です。執筆時のオリジナルのコードベースを確認したい方は`applications/chrome-extension-orig`を参照してください
+
 #### フォルダ構成
 
 ```
 ResQ/
-├── .github/                   # GitHub関連
-│   ├── ci.yaml                # コードチェックを行うワークフロー定義
-│   ├── deploy.yaml            # アプリケーションのデプロイを行うワークフロー定義
-│   ├── terraform-ecr.yml      # Terraformによる Amazon ECR のプロビジョニングを行うワークフロー定義 (Reusable Workflows)
-│   └── terraform-complete.yml # Terraformによる Amazon ECR と AWS lambda のプロビジョニングを行うワークフロー定義 (Reusable Workflows)
-├── applications/              # アプリケーションの実装
-│   ├── backend/               # バックエンド実装（詳しくは docs/backend.md を参照）
-│   └── chrome-extension/      # 拡張機能のフロントエンド実装
-├── docs/                      # ドキュメント関連
-├── environments/              # Docker関連
-│   ├── ci/                    # CI用のcompose定義
-│   ├── deploy/                # デプロイ用のcompose定義
-│   ├── dev/                   # 開発用のcompose定義
-│   ├── Dockerfile.backend     # バックエンド用のDockerfile
-│   ├── Dockerfile.chrome      # Chrome拡張用のDockerfile
-│   └── Dockerfile.deploy      # デプロイ用のDockerfile
-├── terraform/                 # インフラ定義
-│   ├── modules/               # Terraformモジュール
-│   │   ├── ecr/               # ECRリポジトリとIAMロール定義
-│   │   └── lambda/            # Lambda関数とその関連リソース定義
-│   ├── provider.tf            # AWSプロバイダー設定
-│   ├── variables.tf           # 変数定義
-│   └── main.tf                # モジュールの使用定義
-└── README.md
+├── .github/                       # GitHub関連ファイル
+│   └─── workflows/                # ワークフロー定義
+│       ├── ci.yaml                # コードチェックを行うワークフロー定義
+│       ├── deploy.yaml            # アプリケーションのデプロイを行うワークフロー定義
+│       └── terraform-reusable.yml # deploy.yamlから呼び出されてAWSのリソースをプロビジョニングする Reusable Workflows
+│
+├── applications/                  # アプリケーションの実装
+│   ├── backend/                   # バックエンド実装（詳しくは docs/backend.md を参照）
+│   ├── chrome-extension/          # 拡張機能のフロントエンド実装（リファクタリング中）
+│   └── chrome-extension-orig/     # 拡張機能のフロントエンド実装（オリジナル）
+│
+├── docs/                          # ドキュメント
+│
+├── environments/                  # Docker関連ファイル
+│   ├── ci/                        # CI用のcompose定義
+│   ├── deploy/                    # デプロイ用のcompose定義
+│   ├── dev/                       # 開発用のcompose定義
+│   ├── Dockerfile.backend         # バックエンド用のDockerfile
+│   ├── Dockerfile.chrome          # Chrome拡張用のDockerfile
+│   └── Dockerfile.deploy          # デプロイ用のDockerfile
+│
+├── terraform/                     # デプロイ時のインフラ定義
+│   ├── bootstarp/                 # 初期化処理
+│   ├── environments/              # 各環境のプロビジョニングの定義
+│   └── modules/                   # Terraformモジュール
+│       ├── dynamodb/              # DynamoDB定義
+│       ├── ecr/                   # ECRリポジトリ定義
+│       ├── gha-iam/               # GitHub Actions用のIAMロール定義
+│       ├── lambda/                # Lambda関数とその関連リソース定義
+│       └── s3/                    # S3定義
+│
+├── README.md                      # 英語版のREADMEファイル
+└── README_ja.md                   # 日本語版のREADMEファイル
 ```
 
 ### 開発環境のセットアップ
@@ -74,13 +86,14 @@ ResQ/
    ```bash
    # 開発環境の環境変数ファイルを作成
    cp environments/backend.env.sample environments/backend.env
+   cp environments/terraform.env.sample environments/terraform.env
    ```
 
-   作成された`backend.env`に必要な環境変数を指定する
+   作成された`backend.env`に必要な環境変数を指定する。アプリケーションをAWSサービスにデプロイしない場合は、`terraform.env` の編集は特に必要ない（参考: [docs/deployment.md](./docs/deployment.md)）
 
 > [!Note]
 > `OPENAI_API_KEY`には、OpenAIの[ダッシュボード](https://platform.openai.com/api-keys)で発行できるAPIキーを指定して下さい。
-> `CORS_ALLOW_ORIGINS`には、バックエンドへの接続を許容するオリジンを記入してください。
+> `CORS_ALLOW_ORIGINS`には、ブラウザ経由でバックエンドへの接続を許容するオリジンを記入してください。特に制限しない場合は `["*"]` を指定してください。
 
 3. コンテナの起動
    ```bash
@@ -104,6 +117,23 @@ ResQ/
 
 起動したコンテナに入った後のセットアップ手順については、それぞれの`docs`内にある各サービスのドキュメントを参照してください。
 
+- バックエンド: [docs/backend.md](./docs/backend.md)
+- Chrome拡張: [docs/chrome-extension.md](./docs/chrome-extension.md)
+
 ## Acknowledgements
 
 We thank the [Ascender](https://github.com/cvpaperchallenge/Ascender) for making this work possible.
+
+## Citation
+
+```bibtex
+@misc{miura2025understandingsupportingformalemail,
+      title={Understanding and Supporting Formal Email Exchange by Answering AI-Generated Questions},
+      author={Yusuke Miura and Chi-Lan Yang and Masaki Kuribayashi and Keigo Matsumoto and Hideaki Kuzuoka and Shigeo Morishima},
+      year={2025},
+      eprint={2502.03804},
+      archivePrefix={arXiv},
+      primaryClass={cs.HC},
+      url={https://arxiv.org/abs/2502.03804},
+}
+```
