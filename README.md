@@ -41,35 +41,46 @@ ResQ is composed of two main components, managed through Docker Compose as micro
 
 Please see the documentation within the `docs/` folder for more details on each service.
 
+> [!Important]
+> The frontend code used during the paper writing is currently being refactored. If you want to check the original codebase used for the paper, please refer to `applications/chrome-extension-orig`.
+
 #### Folder Structure
 
 ```
 ResQ/
-├── .github/                   # GitHub-related files
-│   ├── ci.yaml                # Workflow definition for code checks
-│   ├── deploy.yaml            # Workflow definition for application deployment
-│   ├── terraform-ecr.yml      # Reusable Workflow: Provisions Amazon ECR via Terraform
-│   └── terraform-complete.yml # Reusable Workflow: Provisions Amazon ECR and AWS Lambda via Terraform
-├── applications/              # Application implementations
-│   ├── backend/               # Backend implementation (see docs/backend.md for details)
-│   ├── chrome-extension/      # Frontend implementation for the Chrome extension
-│   └── chrome-extension-orig/ # Frontend implementation for the Chrome extension
-├── docs/                      # Documentation
-├── environments/              # Docker-related configurations
-│   ├── ci/                    # Docker Compose definitions for CI
-│   ├── deploy/                # Docker Compose definitions for deployment
-│   ├── dev/                   # Docker Compose definitions for development
-│   ├── Dockerfile.backend     # Dockerfile for backend
-│   ├── Dockerfile.chrome      # Dockerfile for Chrome extension
-│   └── Dockerfile.deploy      # Dockerfile for deployment
-├── terraform/                 # Infrastructure-as-code definitions
-│   ├── modules/               # Terraform modules
-│   │   ├── ecr/               # ECR repository and IAM role definitions
-│   │   └── lambda/            # Lambda function and associated resources
-│   ├── provider.tf            # AWS provider settings
-│   ├── variables.tf           # Variable definitions
-│   └── main.tf                # Usage of modules
-└── README.md
+├── .github/                       # GitHub-related files
+│   └─── workflows/                # Workflow definitions
+│       ├── ci.yaml                # Workflow definition for code checks
+│       ├── deploy.yaml            # Workflow definition for application deployment
+│       └── terraform-reusable.yml # Reusable workflows called from deploy.yaml to provision AWS resources
+│
+├── applications/                  # Application implementations
+│   ├── backend/                   # Backend implementation (see docs/backend.md for details)
+│   ├── chrome-extension/          # Frontend implementation for the extension (being refactored)
+│   └── chrome-extension-orig/     # Original frontend implementation for the extension
+│
+├── docs/                          # Documentation
+│
+├── environments/                  # Docker-related files
+│   ├── ci/                        # Compose definitions for CI
+│   ├── deploy/                    # Compose definitions for deployment
+│   ├── dev/                       # Compose definitions for development
+│   ├── Dockerfile.backend         # Dockerfile for backend
+│   ├── Dockerfile.chrome          # Dockerfile for Chrome extension
+│   └── Dockerfile.deploy          # Dockerfile for deployment
+│
+├── terraform/                     # Infrastructure definitions for deployment
+│   ├── bootstarp/                 # Initialization process
+│   ├── environments/              # Definitions for provisioning each environment
+│   └── modules/                   # Terraform modules
+│       ├── dynamodb/              # DynamoDB definition
+│       ├── ecr/                   # ECR repository definition
+│       ├── gha-iam/               # IAM role definition for GitHub Actions
+│       ├── lambda/                # Lambda function and related resource definitions
+│       └── s3/                    # S3 definition
+│
+├── README.md                      # English README file
+└── README_ja.md                   # Japanese README file
 ```
 
 ## Quick Start
@@ -84,13 +95,14 @@ This guide outlines how to quickly spin up ResQ with Docker Compose for local us
    ```bash
    # Create a copy of the sample environment variables file
    cp environments/backend.env.sample environments/backend.env
+   cp environments/terraform.env.sample environments/terraform.env
    ```
 
-   Then open the newly created `backend.env` file and specify the necessary environment variables.
+   Add necessary environment variables to the created `backend.env`. If you do not plan to deploy the application to AWS services, editing `terraform.env` is not necessary (see: [docs/deployment.md](./docs/deployment.md)).
 
 > [!Note]
-> `OPENAI_API_KEY` should be set to the API key you generated in the OpenAI [Dashboard](https://platform.openai.com/api-keys).
-> `CORS_ALLOW_ORIGINS` should include the origin(s) that are allowed to connect to the backend (e.g., http://localhost:3000 if you are testing locally).
+> For `OPENAI_API_KEY`, specify an API key that can be issued from OpenAI's [dashboard](https://platform.openai.com/api-keys).
+> For `CORS_ALLOW_ORIGINS`, enter the origins that are allowed to connect to the backend via browser. If you don't want any restrictions, specify `["*"]`.
 
 3. **Run Docker Containers**
    ```bash
@@ -112,7 +124,10 @@ This guide outlines how to quickly spin up ResQ with Docker Compose for local us
        docker compose exec chrome-extension bash
        ```
 
-   After entering the container, refer to the documentation in each service’s `docs` folder for further setup instructions.
+After entering the container, refer to the documentation in each service’s `docs` folder for further setup instructions.
+
+- Backend: [docs/backend.md](./docs/backend.md)
+- Chrome Extension: [docs/chrome-extension.md](./docs/chrome-extension.md)
 
 5. **Load the Chrome Extension**
    1. Open Google Chrome and go to `chrome://extensions/`.
@@ -131,3 +146,17 @@ This guide outlines how to quickly spin up ResQ with Docker Compose for local us
 
 We thank the [Ascender](https://github.com/cvpaperchallenge/Ascender) for making this work possible.
 
+
+## Citation
+
+```bibtex
+@misc{miura2025understandingsupportingformalemail,
+      title={Understanding and Supporting Formal Email Exchange by Answering AI-Generated Questions},
+      author={Yusuke Miura and Chi-Lan Yang and Masaki Kuribayashi and Keigo Matsumoto and Hideaki Kuzuoka and Shigeo Morishima},
+      year={2025},
+      eprint={2502.03804},
+      archivePrefix={arXiv},
+      primaryClass={cs.HC},
+      url={https://arxiv.org/abs/2502.03804},
+}
+```
