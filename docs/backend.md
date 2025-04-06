@@ -1,127 +1,127 @@
-# バックエンドサービス
+# Backend Service
 
-## セットアップ
+## Setup
 
 > [!Note]
-> 本プロジェクトのDockerを使用した開発環境のセットアップについては、プロジェクトトップの`README.md`を参照してください。
+> Please refer to the project's top-level `README.md` for setting up the development environment using Docker for this project.
 
-1. 仮想環境の作成とライブラリのインストール
+1. Creating a virtual environment and installing libraries
 
-    本プロジェクトでは仮想環境・Pythonライブラリ管理ツールとして、[uv](https://docs.astral.sh/uv/) を採用しています。コンテナ内で以下のコマンドを実行して、仮想環境内に必要なライブラリをインストールしてください：
+    This project uses [uv](https://docs.astral.sh/uv/) as the virtual environment and Python library management tool. Run the following command inside the container to install the necessary libraries in the virtual environment:
 
     ```bash
     uv sync
     ```
 
-2. 開発サーバーの起動
+2. Starting the development server
 
     ```bash
     poe run-backend-dev
     ```
 
-    これで http://localhost:8000 でサーバーが起動します。
+    This will start the server at http://localhost:8000.
 
-3. APIエンドポイントの利用
+3. Using API endpoints
 
-    http://localhost:8000/docs にアクセスすることで、Swagger UIから実際のエンドポイントの挙動を確認できます。
+    You can access http://localhost:8000/docs to check the behavior of the actual endpoints through Swagger UI.
 
     ![swagger ui sample](/docs/images/swagger_ui_sample.png)
 
-## 開発ガイド
+## Development Guide
 
-### フォルダ構成
+### Folder Structure
 
-本プロジェクトのバックエンドは、シンプルなレイヤードアーキテクチャを採用しています。
+The backend of this project adopts a simple layered architecture.
 
 ```
 src/
-├── api/           # プレゼンテーション層：HTTPインターフェース
-│   ├── routes.py  # エンドポイント定義
-│   └── schemas.py # リクエスト/レスポンススキーマ定義
+├── api/           # Presentation layer: HTTP interface
+│   ├── routes.py  # Endpoint definitions
+│   └── schemas.py # Request/response schema definitions
 │
-├── domain/        # ドメイン層：ビジネスロジック
-│   ├── models/    # ドメインモデル定義
-│   └── services/  # ビジネスロジック実装
-│       └── llm/   # LLM関連の実装
+├── domain/        # Domain layer: Business logic
+│   ├── models/    # Domain model definitions
+│   └── services/  # Business logic implementation
+│       └── llm/   # LLM-related implementations
 │
-└── main.py        # アプリケーションのエントリーポイント
+└── main.py        # Application entry point
 ```
 
-### APIエンドポイント
+### API Endpoints
 
-- `GET /api/health`: ヘルスチェック
-- `POST /api/questions`: メール内容に基づく質問の生成（SSE Streaming）
-- `POST /api/reply`: メールへの返信文の生成（SSE Streaming）
+- `GET /api/health`: Health check
+- `POST /api/questions`: Generate questions based on email content (SSE Streaming)
+- `POST /api/reply`: Generate email replies (SSE Streaming)
 
 
-### 開発用コマンド
+### Development Commands
 
-本プロジェクトでは、タスクランナーに [poethepoet](https://poethepoet.natn.io/index.html) を採用しています。以下のコマンドで、開発時に頻繁に使用するタスクを実行できます：
+This project uses [poethepoet](https://poethepoet.natn.io/index.html) as a task runner. You can execute frequently used development tasks with the following commands:
 
 ```bash
-# 開発サーバーの起動
+# Start the development server
 poe run-backend-dev
 
-# コードフォーマット
+# Format code
 poe format
 
-# リンター実行
+# Run linter
 poe lint
 
-# テスト実行
+# Run tests
 poe test
 
-# 全チェック実行
+# Run all checks
 poe test-all
 ```
 
-コード品質管理には以下のツールを利用しています。
+We use the following tools for code quality management:
 
-- **[ruff](https://docs.astral.sh/ruff/)**: リンティングとフォーマッティング
-- **[mypy](https://www.mypy-lang.org/)**: 静的型チェック
-- **[pytest](https://docs.pytest.org/en/stable/)**: テスティング
-- **[mdformat](https://github.com/hukkin/mdformat)**: Markdownフォーマッティング
+- **[ruff](https://docs.astral.sh/ruff/)**: Linting and formatting
+- **[mypy](https://www.mypy-lang.org/)**: Static type checking
+- **[pytest](https://docs.pytest.org/en/stable/)**: Testing
+- **[mdformat](https://github.com/hukkin/mdformat)**: Markdown formatting
 
 ## FAQ
 
-### Q. 新しいPythonパッケージを追加したい場合はどうすればいいですか？
+### Q. How do I add a new Python package?
 
-A. `uv add <LIBRARY_NAME>`を使って必要なライブラリを追加するか、 `pyproject.toml` のdependenciesを直接編集して `uv sync` で仮想環境を更新してください。その他の `uv` のコマンドの詳細については[こちら](https://docs.astral.sh/uv/reference/cli/)を参照して下さい。
+A. Either use `uv add <LIBRARY_NAME>` to add the required library, or directly edit the dependencies in `pyproject.toml` and update the virtual environment with `uv sync`. For more details about `uv` commands, please refer to [this documentation](https://docs.astral.sh/uv/reference/cli/).
 
-### Q: エンドポイントのストリーミングレスポンスの詳細が知りたいです
+### Q: I want to know more about endpoint streaming responses
 
-A: 質問生成と応答生成のエンドポイントでは、クライアントからのPOSTリクエストに対する応答として[Server-sent-event](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events)を使ったストリーミングレスポンスを実装しています。
+A: For question generation and reply generation endpoints, we've implemented streaming responses using [Server-sent-events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events) as a response to POST requests from clients.
 
-各イベントの形式の定義は[こちら](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events#event_stream_format)を、クライアント側のイベント処理の手順については[こちら](https://html.spec.whatwg.org/multipage/server-sent-events.html#event-stream-interpretation)を参考にしてください。
+For the definition of each event format, refer to [this link](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events/Using_server-sent_events#event_stream_format), and for client-side event handling procedures, refer to [this link](https://html.spec.whatwg.org/multipage/server-sent-events.html#event-stream-interpretation).
 
-### Q: システムプロンプトやテンプレートはどこで管理されていますか？
+### Q: Where are system prompts and templates managed?
 
-A: `data/`ディレクトリ配下で管理されています：
-- `system_prompts/`: LLMのシステムプロンプト
-- `templates/`: プロンプトテンプレート（Jinja2形式）
+A: They are managed in the `data/` directory:
+- `system_prompts/`: LLM system prompts
+- `templates/`: Prompt templates (Jinja2 format)
 
-これらは、各LLMサービスの具象クラス（`QuestionGenerationLLM`, `ReplyGenerationLLM`）のコンストラクタ（`__init__`）で読み込まれています。
+These are loaded in the constructors (`__init__`) of concrete LLM service classes (`QuestionGenerationLLM`, `ReplyGenerationLLM`).
 
-プロンプトテンプレートは Jinja2 形式で記述され、以下のような情報をコード上で生成・代入して使用しています：
-- メール情報（件名、本文、送信者情報など）
-- ユーザー情報（名前、役職、好みなど）
-- カスタマイズ設定（トーン、スタイルなど）
+Prompt templates are written in Jinja2 format, and the following information is generated and populated from the code:
+- Email information (subject, body, sender information, etc.)
+- User information (name, position, preferences, etc.)
+- Customization settings (tone, style, etc.)
 
-### Q: 本番環境での実行方法は？
+### Q: How do I run in production?
 
-A: 以下のコマンドで本番用サーバーを起動できます：
+A: You can start the production server with the following command:
 ```bash
 poe run-backend-prod
 ```
-これにより、4つのワーカープロセスで動作するGunicornサーバーが起動します。
+This will start a Gunicorn server running with four worker processes.
 
-現状は特に開発用のサーバーを使用してもらう形で問題ないですが、AWSなどのクラウドサービスにデプロイする際には上記のコマンドを使用してください。
+Currently, it's fine to use the development server, but when deploying to cloud services like AWS, please use the above command.
 
-### Q: 新しいLLM機能を追加するにはどうすればよいですか？
+### Q: How do I add a new LLM feature?
 
-A: 以下の手順で実装できます：
+A: You can implement it with the following steps:
 
-1. `src/domain/services/llm/`に新しいLLMクラスを作成
+1. Create a new LLM class in `src/domain/services/llm/`
    ```python
    class NewFeatureLLM(LLMBase[InputType, OutputType]):
        def __init__(self, prompt_directory: pathlib.Path) -> None:
@@ -131,22 +131,22 @@ A: 以下の手順で実装できます：
    ```
 
 
-2. `LLMBase`を継承し、必要なメソッドを実装
-   - `astream`: ストリーミング形式でのレスポンス生成
-   - `acompletion`: 一括形式でのレスポンス生成
+2. Inherit from `LLMBase` and implement necessary methods
+   - `astream`: Response generation in streaming format
+   - `acompletion`: Response generation in batch format
 
-3. `data/`に必要なプロンプトとテンプレートを追加
-   - システムプロンプト: LLMの役割や制約を定義
-   - テンプレート: 入力データの構造化フォーマットを定義
+3. Add necessary prompts and templates to `data/`
+   - System prompt: Define LLM role and constraints
+   - Template: Define structured format for input data
 
-4. `ChatService`に（もしくは必要に応じて新たなサービスクラスを作成して）新機能を統合
+4. Integrate the new feature into `ChatService` (or create a new service class if needed)
 
 > [!IMPORTANT]
-> `LLMBase`では`astream`や`acompletion`の入出力の型安全性を確保するためジェネリクスを使用しています。従って、継承して具象クラスを定義する際には、適切な型引数（`InputType`, `OutputType`）を指定してください。
+> `LLMBase` uses generics to ensure type safety for `astream` and `acompletion` input/output. Therefore, when defining concrete classes that inherit from it, please specify appropriate type arguments (`InputType`, `OutputType`).
 
-## システム構成の詳細
+## System Architecture Details
 
-### クラス図
+### Class Diagram
 
 ```mermaid
 classDiagram
@@ -215,7 +215,7 @@ classDiagram
     ReplyGenerationLLM ..> UserInformation: uses
 ```
 
-### シーケンス図（質問生成フロー）
+### Sequence Diagram (Question Generation Flow)
 
 ```mermaid
 sequenceDiagram
@@ -232,12 +232,12 @@ sequenceDiagram
     ChatService->>QuestionLLM: astream()
     activate QuestionLLM
 
-    QuestionLLM->>QuestionLLM: テンプレート展開
+    QuestionLLM->>QuestionLLM: Template expansion
     QuestionLLM->>OpenAI: chat.completions.create()
     activate OpenAI
 
-    loop ストリーミング
-        OpenAI-->>QuestionLLM: チャンクデータ
+    loop Streaming
+        OpenAI-->>QuestionLLM: Chunk data
         QuestionLLM-->>ChatService: yield content
         ChatService-->>FastAPI: yield content
         FastAPI-->>Client: SSE: data: content
@@ -249,7 +249,7 @@ sequenceDiagram
     deactivate FastAPI
 ```
 
-### シーケンス図（返信生成フロー）
+### Sequence Diagram (Reply Generation Flow)
 
 ```mermaid
 sequenceDiagram
@@ -266,12 +266,12 @@ sequenceDiagram
     ChatService->>ReplyLLM: astream()
     activate ReplyLLM
 
-    ReplyLLM->>ReplyLLM: テンプレート展開
+    ReplyLLM->>ReplyLLM: Template expansion
     ReplyLLM->>OpenAI: chat.completions.create()
     activate OpenAI
 
-    loop ストリーミング
-        OpenAI-->>ReplyLLM: チャンクデータ
+    loop Streaming
+        OpenAI-->>ReplyLLM: Chunk data
         ReplyLLM-->>ChatService: yield content
         ChatService-->>FastAPI: yield content
         FastAPI-->>Client: SSE: data: content

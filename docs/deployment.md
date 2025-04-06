@@ -1,42 +1,42 @@
-# アプリケーションバックエンドのデプロイ
+# Application Backend Deployment
 
-本プロジェクトでは、GitHub Actions と [Terraform](https://developer.hashicorp.com/terraform) を使用して AWS Lambda への継続的デリバリー(CD)を行っています。プロジェクトで公開しているバックエンドサーバーを利用いただく場合には特に気にする必要はありませんが、ご自身で本アプリケーションを改良し、 AWS 上にセルフホストしたい場合には以下の手順を参考にしてください。
+In this project, we use GitHub Actions and [Terraform](https://developer.hashicorp.com/terraform) for continuous delivery (CD) to AWS Lambda. If you are using the backend server published by this project, you don't need to worry about this. However, if you want to improve the application yourself and self-host it on AWS, please refer to the following steps.
 
-## 事前準備
+## Prerequisites
 
-### 1. AWS 関連の準備
+### 1. AWS Related Preparation
 
- - アカウントの作成
+ - Create an account
 
-   本プロジェクトでは、デプロイ先のクラウドプロバイダーとして [AWS](https://aws.amazon.com/jp/?nc2=h_lg) に対応しています。 AWS のアカウントを所持されていない方は、まずアカウントを作成してください。
+   This project supports [AWS](https://aws.amazon.com/) as the cloud provider for deployment. If you don't have an AWS account, please create one first.
 
-   アプリケーションで使用するサービスは以下の通りです：
-   - [Amazon Elastic Container Registry(ECR)](https://aws.amazon.com/jp/ecr/): AWS Lambda 関数の作成元となる Docker イメージの保存
-   - [AWS Lambda](https://aws.amazon.com/jp/lambda/): アプリケーションバックエンドをサーバーレス関数として実行
-   - [Amazon S3](https://aws.amazon.com/jp/s3/): Terraform の state 管理
-   - [Amazon DynamoDB](https://aws.amazon.com/jp/dynamodb/): Terraform の state locking
+   The AWS services used in this application are:
+   - [Amazon Elastic Container Registry (ECR)](https://aws.amazon.com/ecr/): For storing Docker images used to create AWS Lambda functions
+   - [AWS Lambda](https://aws.amazon.com/lambda/): For running the application backend as serverless functions
+   - [Amazon S3](https://aws.amazon.com/s3/): For Terraform state management
+   - [Amazon DynamoDB](https://aws.amazon.com/dynamodb/): For Terraform state locking
 
-  いずれのサービスも無料枠の範囲内であれば課金されることはありませんが、詳細はご自身でよく確認の上で利用してください。
+  All services can be used within the free tier limits without charges, but please check the details carefully before using.
 
-  - [AWS Lambdaの料金](https://aws.amazon.com/jp/lambda/pricing/)
-  - [Amazon ECRの料金](https://aws.amazon.com/jp/ecr/pricing/)
-  - [Amazon S3の料金](https://aws.amazon.com/jp/s3/pricing/)
-  - [Amazon DynamoDBの料金](https://aws.amazon.com/jp/dynamodb/pricing/)
+  - [AWS Lambda pricing](https://aws.amazon.com/lambda/pricing/)
+  - [Amazon ECR pricing](https://aws.amazon.com/ecr/pricing/)
+  - [Amazon S3 pricing](https://aws.amazon.com/s3/pricing/)
+  - [Amazon DynamoDB pricing](https://aws.amazon.com/dynamodb/pricing/)
 
 > [!Important]
-> 本ドキュメントの手順に従ってデプロイを実行した結果、予期しない課金が発生した場合でも、当方は一切の責任を負いかねますので、あらかじめご了承ください。
+> Please note that we cannot take responsibility for any unexpected charges incurred as a result of following the deployment procedures in this document.
 
- - 環境変数の設定
+ - Environment variable setup
 
-   ローカル環境や GitHub Actions のワークフロー環境から AWS リソースへのアクセスを許可するために、AWS の認証キーを取得する必要があります。 `environments/terraform.env` に所定の環境変数を指定してください（詳しくは[認証の仕組み](認証の仕組み)の章を参照してください）
+   To allow access to AWS resources from your local environment or GitHub Actions workflow environment, you need to obtain AWS authentication keys. Specify the required environment variables in `environments/terraform.env` (for more details, refer to the [Authentication Mechanism](#supplementary-authentication-mechanism) section).
 
-   `*.env` ファイルは、セキュリティ上の観点から Git の追跡対象外に指定してあるため、最初に `*.env.sample` をコピーして自身でファイルを作成する必要があります。
+   The `*.env` files are excluded from Git tracking for security reasons, so you need to create the file yourself by copying `*.env.sample` first.
 
    ```bash
    cp environments/terraform.env.sample environments/terraform.env
    ```
 
-   コピーしたファイルに以下の環境変数を指定してください。
+   Specify the following environment variables in the copied file:
 
    ```Dotenv
    # AWS credentials
@@ -46,177 +46,176 @@
    AWS_DEFAULT_REGION="<AWS_DEFAULT_REGION>"
    ```
 
-### 2. GitHub リポジトリの Variables/Secrets 設定
+### 2. GitHub Repository Variables/Secrets Setup
 
-GitHub Actions のワークフロー内で参照している環境変数については、本リポジトリを自身の GitHub アカウントに複製した後に GitHub 上で指定する必要があります。
+The environment variables referenced in the GitHub Actions workflow need to be specified on GitHub after you clone this repository to your GitHub account.
 
-GitHub にはデプロイ環境を定義・管理する機能として [Environments](https://docs.github.com/ja/actions/managing-workflow-runs-and-deployments/managing-deployments/managing-environments-for-deployment) という機能が提供されており、こちらを使用して必要な環境変数を登録します。リポジトリの "Settings" -> "Environments" から **`dev`** と **`prod`** という二つの環境を作成し、それぞれの環境で以下の環境変数を [Environment secrets](https://docs.github.com/ja/actions/managing-workflow-runs-and-deployments/managing-deployments/managing-environments-for-deployment#environment-secrets), [Environment variables](https://docs.github.com/ja/actions/managing-workflow-runs-and-deployments/managing-deployments/managing-environments-for-deployment#environment-variables) として登録してください
+GitHub provides a feature called [Environments](https://docs.github.com/en/actions/managing-workflow-runs-and-deployments/managing-deployments/managing-environments-for-deployment) for defining and managing deployment environments. Use this feature to register the necessary environment variables. Create two environments named **`dev`** and **`prod`** from your repository's "Settings" -> "Environments", and register the following environment variables as [Environment secrets](https://docs.github.com/en/actions/managing-workflow-runs-and-deployments/managing-deployments/managing-environments-for-deployment#environment-secrets) and [Environment variables](https://docs.github.com/en/actions/managing-workflow-runs-and-deployments/managing-deployments/managing-environments-for-deployment#environment-variables) for each environment:
 
- - Environment secrets として登録する環境変数
+ - Environment secrets
 
    ```yaml
-   OPENAI_API_KEY: "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" # OpenAI API キー
-   ALLOWED_ORIGINS: "["chrome-extension://<EXTENSION_ID>"]" # list(string) 形式で、アクセスを許可するオリジンを指定
+   OPENAI_API_KEY: "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" # OpenAI API key
+   ALLOWED_ORIGINS: "["chrome-extension://<EXTENSION_ID>"]" # List of allowed origins in list(string) format
    ```
 
- - Environment variables として登録する環境変数
+ - Environment variables
 
    ```yaml
-   PROJECT_NAME: "Project-Name" # プロジェクト名（AWSのリソースの識別子として使用されます）
-   AWS_ACCOUNT_ID: "123456789012"  # AWSアカウントID
-   AWS_REGION: "ap-northeast-1" # AWSのリージョン名。必ず 1. で設定した `AWS_DEFAULT_REGION` と同じ値にすること
-   LAMBDA_MEMORY: "512" # Lambda 関数のメモリサイズ(MB)
-   LAMBDA_TIMEOUT: "30" # Lambda 関数のタイムアウト設定(秒)
+   PROJECT_NAME: "Project-Name" # Project name (used as an identifier for AWS resources)
+   AWS_ACCOUNT_ID: "123456789012"  # AWS account ID
+   AWS_REGION: "ap-northeast-1" # AWS region name. Must be the same as `AWS_DEFAULT_REGION` set in step 1
+   LAMBDA_MEMORY: "512" # Lambda function memory size (MB)
+   LAMBDA_TIMEOUT: "30" # Lambda function timeout setting (seconds)
    ```
 
 >[!Warning]
-> GitHub の Environments 機能は、 Free プランのユーザーは Public リポジトリでないと使用できません。 Free プランの Private リポジトリで利用したい方は、代わりに [Repository secrets](https://docs.github.com/ja/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-a-repository) と [Repository variables](https://docs.github.com/ja/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables#creating-configuration-variables-for-a-repository) を使用してください。この場合は、ワークフローの入力値として環境の情報が使用できないため `.github/workflows/deploy.yml` の `workflow dispatch.inputs` を適宜修正してください（ input 自体を削除して、`.github/workflows/deploy.yml` ワークフロー内の `inputs.environment` をすべて "prod" でハードコーディングするなどでも良いと思います）
+> GitHub's Environments feature is only available for Public repositories for Free plan users. If you want to use it with a Free plan Private repository, use [Repository secrets](https://docs.github.com/en/actions/security-for-github-actions/security-guides/using-secrets-in-github-actions#creating-secrets-for-a-repository) and [Repository variables](https://docs.github.com/en/actions/writing-workflows/choosing-what-your-workflow-does/store-information-in-variables#creating-configuration-variables-for-a-repository) instead. In this case, you'll need to modify the `.github/workflows/deploy.yml` file's `workflow dispatch.inputs` appropriately (for example, you can remove the input itself and hardcode `inputs.environment` as "prod" throughout the `.github/workflows/deploy.yml` workflow).
 
 > [!Important]
-> Cross Origin Resource Sharing(CORS) は、あるオリジンに設置された API サーバーに対して、別のオリジンからリクエストが送られた際に適用される**ブラウザの**制約です。従って、この設定を適用しても、**ブラウザ経由でアクセスを試みた際には** Chrome Extension からのリクエストのみ許可されるようになるというだけであり、 curl や Postman などを使用すれば、任意のIPアドレスからリクエストを送ることができることに注意してください。
-> 本プロジェクトでは、バックエンドに認証機能を追加した際にセキュリティ対策として必要となるため、CORS の設定を最初から含めています。
+> Cross Origin Resource Sharing (CORS) is a **browser** constraint that applies when requests are sent from one origin to an API server located at another origin. Setting this up only restricts requests from Chrome Extensions when accessed through a browser. Requests can still be sent from any IP address using tools like curl or Postman. This project includes CORS settings from the beginning as it will be necessary for security when adding authentication to the backend.
 
-### 3. ブランチ設定
+### 3. Branch Setup
 
-一般的なアプリケーションのデプロイでは、本番環境と開発環境で異なるブランチを使用します。例えば、以下の二つのブランチを作成して下さい：
+For typical application deployments, different branches are used for production and development environments. Please create the following two branches:
 
-- `develop` ブランチ: 開発環境へのデプロイに使用
-- `release` ブランチ: 本番環境へのデプロイに使用
+- `develop` branch: Used for deployment to the development environment
+- `release` branch: Used for deployment to the production environment
 
-また、上記以外のブランチ名を採用した場合は、 `.github/workflows/terraform-reusable.yml` の最後のステップで条件分岐に使用されるブランチ名を書き換えてください
+If you adopt different branch names, please modify the branch names used in the condition check in the last step of `.github/workflows/terraform-reusable.yml`:
 
 ```yaml
 ...
 - name: Terraform Apply
    working-directory: ${{ env.DOCKER_COMPOSE_DIRECTORY }}
-   if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/release' # <--- ここのブランチ名を2つ変更する
+   if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/release' # <--- Change these two branch names here
    run: docker compose exec -T terraform terraform -chdir=environments apply -auto-approve tfplan
 ...
 ```
 
 > [!Important]
-> 2. 3. で Environments と対応するブランチを作成しただけでは、`develop` ブランチの内容を `prod` 環境にデプロイすることも可能です。そのため、[デプロイ保護規則](https://docs.github.com/ja/actions/managing-workflow-runs-and-deployments/managing-deployments/managing-environments-for-deployment#deployment-protection-rules)を設定し、環境ごとにデプロイ可能なブランチを制限したり、デプロイ時にレビュアーの承認を必須にすることを強く推奨します
+> Just creating Environments and corresponding branches in steps 2 and 3 would still allow deploying `develop` branch content to the `prod` environment. It is strongly recommended to set up [deployment protection rules](https://docs.github.com/en/actions/managing-workflow-runs-and-deployments/managing-deployments/managing-environments-for-deployment#deployment-protection-rules) to restrict which branches can be deployed to each environment, or to require reviewer approval for deployments.
 
-### 4. Terraform 関連の設定
+### 4. Terraform Related Setup
 
-- `*.tfvars` ファイルの設定
+- `*.tfvars` file setup
 
-   本プロジェクトでは、一部の Terraform によるリソースプロビジョニングの実行時に、外部から指定した変数を使用しています。この変数は `*.tfvars` ファイルによって管理されており、 terraform コマンドを実行する前に所定の変数を記載しておく必要があります。なお、 `*.tfvars` ファイルはセキュリティ上の観点から Git の追跡対象外に指定してあるため、最初に `*.tfvars.sample` をコピーして自身でファイルを作成する必要があります。
+   This project uses externally specified variables for some Terraform resource provisioning. These variables are managed in `*.tfvars` files, which need to be configured before running terraform commands. Note that `*.tfvars` files are excluded from Git tracking for security reasons, so you need to create them yourself by copying `*.tfvars.sample` first.
 
    - `terraform/bootstrap/shared/terraform.tfvars`
 
-      ファイルの作成
+      Create the file:
       ```bash
       cp terraform/bootstrap/shared/terraform.tfvars.sample terraform/bootstrap/shared/terraform.tfvars
       ```
 
-      変数の記入
+      Fill in the variables:
       ```terraform
-      project_name      = "Project-Name" # プロジェクト名。必ず 2. で設定した `PROJECT_NAME` と同じ値にすること
-      github_repository = "OwnerName/RepositoryName" # リポジトリのオーナーとリポジトリ名をつなげた値
+      project_name      = "Project-Name" # Project name. Must be the same as `PROJECT_NAME` set in step 2
+      github_repository = "OwnerName/RepositoryName" # Owner and repository name combined
       ```
 
    - `terraform/bootstrap/dev/terraform.tfvars`
 
-      ファイルの作成
+      Create the file:
       ```bash
       cp terraform/bootstrap/dev/terraform.tfvars.sample terraform/bootstrap/dev/terraform.tfvars
       ```
 
-      変数の記入
+      Fill in the variables:
       ```terraform
-      project_name = "Project-Name" # プロジェクト名。必ず 2. で設定した `PROJECT_NAME` と同じ値にすること
+      project_name = "Project-Name" # Project name. Must be the same as `PROJECT_NAME` set in step 2
       ```
 
    - `terraform/bootstrap/prod/terraform.tfvars`
 
-      ファイルの作成
+      Create the file:
       ```bash
       cp terraform/bootstrap/prod/terraform.tfvars.sample terraform/bootstrap/prod/terraform.tfvars
       ```
 
-      変数の記入
+      Fill in the variables:
       ```terraform
-      project_name = "Project-Name" # プロジェクト名。必ず 2. で設定した `PROJECT_NAME` と同じ値にすること
+      project_name = "Project-Name" # Project name. Must be the same as `PROJECT_NAME` set in step 2
       ```
 
-- `backend.hcl` ファイルの設定
+- `backend.hcl` file setup
 
-   terraform では、実際にどのようなリソースが建てられているのかを記録するために、state ファイル（`*.tfstate`）を使用します。このファイルには、terraformによって管理されているすべてのリソースの状態（例：リソースの識別子、属性、依存関係など）が記録されています。複数人で開発を行う場合には、それぞれの開発環境からリソースの作成・更新・削除があった場合にも統一的なリソースの状態管理ができるように、 state ファイルをクラウド上（今回の場合は S3 ）で管理することが推奨されます。
-   また、複数の開発者が同時に terraform コマンドを実行した場合、state ファイルの競合やリソースの不整合が発生する可能性があるため terraform には state lockingという機能が提供されています。この state ファイルの lock 状況も、通常はクラウド上（今回の場合は DynamoDB ）で管理を行います。
+   Terraform uses state files (`*.tfstate`) to record what resources have been created. These files contain the state of all resources managed by Terraform (e.g., resource identifiers, attributes, dependencies). When multiple people are working on development, it's recommended to manage state files in the cloud (in this case, S3) to ensure unified resource state management regardless of which development environment creates, updates, or deletes resources.
+   
+   Additionally, Terraform provides a state locking feature to prevent conflicts or inconsistencies when multiple developers run terraform commands simultaneously. This state lock status is also typically managed in the cloud (in this case, DynamoDB).
 
-   そして、state ファイルとその lock 状態の管理場所を設定しているのが `backend.hcl` ファイルであるため、事前に設定が必要です。
+   The `backend.hcl` file configures where the state file and its lock status are managed, so it needs to be set up in advance.
 
    - `terraform/bootstrap/dev/backend.hcl`
 
       ```hcl
-      bucket         = "<PROJECT_NAME>-terraform-state"      # stateファイルを保存するS3バケット名
-      key            = "bootstrap/dev/terraform.tfstate"     # stateファイルをS3に保存する際のキー名
-      region         = "<AWS_REGION>"                        # S3バケットのリージョン
-      dynamodb_table = "<PROJECT_NAME>-terraform-state-lock" # state lockingに使用するDynamoDBテーブル名
-      encrypt        = true                                  # stateファイルの暗号化の有効化
+      bucket         = "<PROJECT_NAME>-terraform-state"      # S3 bucket name for storing state files
+      key            = "bootstrap/dev/terraform.tfstate"     # Key name for storing the state file in S3
+      region         = "<AWS_REGION>"                        # S3 bucket region
+      dynamodb_table = "<PROJECT_NAME>-terraform-state-lock" # DynamoDB table name for state locking
+      encrypt        = true                                  # Enable state file encryption
       ```
 
       - `terraform/bootstrap/prod/backend.hcl`
 
       ```hcl
-      bucket         = "<PROJECT_NAME>-terraform-state"      # stateファイルを保存するS3バケット名
-      key            = "bootstrap/prod/terraform.tfstate"     # stateファイルをS3に保存する際のキー名
-      region         = "<AWS_REGION>"                        # S3バケットのリージョン
-      dynamodb_table = "<PROJECT_NAME>-terraform-state-lock" # state lockingに使用するDynamoDBテーブル名
-      encrypt        = true                                  # stateファイルの暗号化の有効化
+      bucket         = "<PROJECT_NAME>-terraform-state"      # S3 bucket name for storing state files
+      key            = "bootstrap/prod/terraform.tfstate"     # Key name for storing the state file in S3
+      region         = "<AWS_REGION>"                        # S3 bucket region
+      dynamodb_table = "<PROJECT_NAME>-terraform-state-lock" # DynamoDB table name for state locking
+      encrypt        = true                                  # Enable state file encryption
       ```
 
    - `terraform/environments/backend-dev.hcl`
 
       ```hcl
-      bucket         = "<PROJECT_NAME>-terraform-state"      # stateファイルを保存するS3バケット名
-      key            = "environments/dev/terraform.tfstate"  # stateファイルをS3に保存する際のキー名
-      region         = "<AWS_REGION>"                        # S3バケットのリージョン
-      dynamodb_table = "<PROJECT_NAME>-terraform-state-lock" # state lockingに使用するDynamoDBテーブル名
-      encrypt        = true                                  # stateファイルの暗号化の有効化
+      bucket         = "<PROJECT_NAME>-terraform-state"      # S3 bucket name for storing state files
+      key            = "environments/dev/terraform.tfstate"  # Key name for storing the state file in S3
+      region         = "<AWS_REGION>"                        # S3 bucket region
+      dynamodb_table = "<PROJECT_NAME>-terraform-state-lock" # DynamoDB table name for state locking
+      encrypt        = true                                  # Enable state file encryption
       ```
 
    - `terraform/environments/backend-prod.hcl`
 
       ```hcl
-      bucket         = "<PROJECT_NAME>-terraform-state"      # stateファイルを保存するS3バケット名
-      key            = "environments/prod/terraform.tfstate"  # stateファイルをS3に保存する際のキー名
-      region         = "<AWS_REGION>"                        # S3バケットのリージョン
-      dynamodb_table = "<PROJECT_NAME>-terraform-state-lock" # state lockingに使用するDynamoDBテーブル名
-      encrypt        = true                                  # stateファイルの暗号化の有効化
+      bucket         = "<PROJECT_NAME>-terraform-state"      # S3 bucket name for storing state files
+      key            = "environments/prod/terraform.tfstate"  # Key name for storing the state file in S3
+      region         = "<AWS_REGION>"                        # S3 bucket region
+      dynamodb_table = "<PROJECT_NAME>-terraform-state-lock" # DynamoDB table name for state locking
+      encrypt        = true                                  # Enable state file encryption
       ```
 
+## Deployment Procedure
 
-## デプロイの手順
+The Terraform resource provisioning in this project is broadly composed of three stages:
 
-本プロジェクトの Terraform によるリソースプロビジョニングは、大まかには以下の3段階で構成されています：
+1. Shared resource (terraform/bootstrap/shared/) provisioning
+   - Purpose: Prepare resources for Terraform state management and build authentication infrastructure for GitHub Actions
+   - Resources created:
+     * S3 bucket (for terraform state storage)
+     * DynamoDB table (for state locking)
+     * IAM role for GitHub Actions and associated IAM policies (for OIDC authentication)
+   - Deployment method: Run locally (`terraform init` → `terraform apply`)
+   - tfstate management: Managed locally
 
-1. 共有リソース（terraform/bootstrap/shared/）のプロビジョニング
-   - 目的：Terraform の状態管理用リソースの用意と GitHub Actions で使用する認証基盤の構築
-   - 作成されるリソース：
-     * S3バケット（terraform state保存用）
-     * DynamoDBテーブル（state locking用）
-     * GitHub Actions用のIAMロールと付随するIAMポリシー（OIDC認証用）
-   - デプロイ方法：ローカルで実行（`terraform init` → `terraform apply`）
-   - tfstateの管理：ローカルで管理
+2. Environment-specific preparation (terraform/bootstrap/{dev,prod}/)
+   - Purpose: Prepare ECR repositories for each environment (dev/prod)
+   - Resources created:
+     * ECR repository (for storing Docker images used for Lambda function deployment)
+   - Deployment method: Run locally (`terraform init -backend-config=backend.hcl` → `terraform apply`)
+   - tfstate management: Managed by S3 bucket and DynamoDB created in step 1
 
-2. 環境別の事前準備（terraform/bootstrap/{dev,prod}/）
-   - 目的：各環境(dev/prod)で使用するECRリポジトリの準備
-   - 作成されるリソース：
-     * ECRリポジトリ（Lambda関数デプロイに使用するDockerイメージ保存用）
-   - デプロイ方法：ローカルで実行（`terraform init -backend-config=backend.hcl` → `terraform apply`）
-   - tfstateの管理：1で作成したS3バケットとDynamoDBで管理
+3. Application resource (terraform/environments/) provisioning
+   - Purpose: Deploy Lambda function and issue/configure function URL
+   - Resources created:
+     * Lambda function (with function URL)
+     * IAM role for Lambda execution
+   - Deployment method: Automatically executed by GitHub Actions (executed in `.github/workflows/terraform-reusable.yml`)
+   - tfstate management: Managed by S3 bucket and DynamoDB created in step 1
 
-3. アプリケーションリソース（terraform/environments/）のプロビジョニング
-   - 目的：Lambda関数のデプロイと関数URLの発行・設定
-   - 作成されるリソース：
-     * Lambda関数（関数URL付き）
-     * Lambda実行用IAMロール
-   - デプロイ方法：GitHub Actionsで自動実行（`.github/workflows/terraform-reusable.yml`で実行）
-   - tfstateの管理：1で作成したS3バケットとDynamoDBで管理
-
-### 1. 共有リソースのプロビジョニング
+### 1. Shared Resource Provisioning
 
 ```bash
 cd terraform/bootstrap/shared
@@ -225,76 +224,76 @@ terraform init
 terraform apply
 ```
 
-このステップで作成される GitHub Actions 用のIAMロールには以下の権限が付与されます：
-- IAMロールの作成・管理（Lambda 実行用）
-- ECRリポジトリへのアクセス（ Docker イメージのプッシュ・プル）
-- Lambda 関数の管理（作成・更新・削除）
-- S3バケットへのアクセス（ terraform の state 管理用）
-- DynamoDB テーブルへのアクセス（ state locking 用）
+The IAM role created for GitHub Actions in this step is granted the following permissions:
+- Creating and managing IAM roles (for Lambda execution)
+- Accessing ECR repositories (pushing and pulling Docker images)
+- Managing Lambda functions (creating, updating, deleting)
+- Accessing S3 buckets (for terraform state management)
+- Accessing DynamoDB tables (for state locking)
 
-### ２. 環境別の事前準備
+### 2. Environment-Specific Preparation
 
 ```bash
-cd terraform/bootstrap/dev # 開発環境へのデプロイ
-cd terraform/bootstrap/prod # 本番環境へのデプロイ
+cd terraform/bootstrap/dev # For development environment deployment
+cd terraform/bootstrap/prod # For production environment deployment
 
 terraform init -backend-config=backend.hcl
 terraform apply
 ```
 
-### ３. アプリケーションリソースのプロビジョニング
+### 3. Application Resource Provisioning
 
-GitHub のリポジトリページを開き、"Actions" を開きます。左側にリポジトリで使用可能なワークフローの一覧が並んでいるので、"deploy-applications" を選択します。画面上の "Run workflow" ボタンから**デプロイする対象のブランチ(develop/release)**と**デプロイ先の環境(dev/prod)**を選択して実行すれば、アプリケーションリソースがデプロイされます。
+Open the GitHub repository page and go to "Actions". Select "deploy-applications" from the list of available workflows on the left side. Click the "Run workflow" button, select the **branch to deploy (develop/release)** and the **target environment (dev/prod)**, and execute to deploy the application resources.
 
-以下に、デプロイ全体のフローのシーケンス図を載せておきます。
+Here's a sequence diagram of the overall deployment flow:
 
 ```mermaid
 sequenceDiagram
-    participant Local as ローカル環境
+    participant Local as Local Environment
     participant GHA as GitHub Actions
     participant S3 as Amazon S3
     participant DDB as DynamoDB
     participant ECR as Amazon ECR
     participant Lambda as AWS Lambda
 
-    Note over Local,Lambda: 1. 共有リソースのデプロイ（ローカル実行）
-    Local->>S3: S3バケット作成
-    Local->>DDB: DynamoDBテーブル作成
-    Local->>GHA: GitHub Actions用IAMロール作成
+    Note over Local,Lambda: 1. Shared resource deployment (local execution)
+    Local->>S3: Create S3 bucket
+    Local->>DDB: Create DynamoDB table
+    Local->>GHA: Create IAM role for GitHub Actions
 
-    Note over Local,Lambda: 2. 環境別ブートストラップ（ローカル実行）
-    Local->>S3: terraform state保存
-    Local->>DDB: state locking
-    Local->>ECR: ECRリポジトリ作成
+    Note over Local,Lambda: 2. Environment-specific bootstrap (local execution)
+    Local->>S3: Save terraform state
+    Local->>DDB: State locking
+    Local->>ECR: Create ECR repository
 
-    Note over Local,Lambda: 3. アプリケーションデプロイ（GitHub Actions実行）
-    GHA->>GHA: Dockerイメージビルド
-    GHA->>ECR: イメージプッシュ
-    GHA->>S3: terraform state読み込み
-    GHA->>DDB: state lock取得
-    GHA->>Lambda: Lambda関数作成/更新
-    Note right of Lambda: Function URLで公開
+    Note over Local,Lambda: 3. Application deployment (GitHub Actions execution)
+    GHA->>GHA: Build Docker image
+    GHA->>ECR: Push image
+    GHA->>S3: Load terraform state
+    GHA->>DDB: Acquire state lock
+    GHA->>Lambda: Create/Update Lambda function
+    Note right of Lambda: Publish with Function URL
 ```
 
-## （補足）認証の仕組み
+## (Supplementary) Authentication Mechanism
 
-### ローカルでのterraform実行時
+### When Running Terraform Locally
 
-本リポジトリでは GitHub Actions のワークフロー上で terraform コマンドを実行することで、アプリケーションの継続的デリバリー(CD)を行っています。
-この機能が正しく動作するためには、事前にAWS上にいくつか用意する必要のあるリソースがありますが、本プロジェクトではこれらも terraform によって管理しています。具体的には以下の３つです。
+This repository performs continuous delivery (CD) of the application by executing terraform commands on GitHub Actions workflows.
+For this functionality to work correctly, there are several resources that need to be prepared on AWS in advance, which are also managed by terraform in this project. Specifically, the following three:
 
-     - S3バケット（terraform state保存用）
-     - DynamoDBテーブル（state locking用）
-     - GitHub Actions用のIAMロール（OIDC認証）
+     - S3 bucket (for terraform state storage)
+     - DynamoDB table (for state locking)
+     - IAM role for GitHub Actions (OIDC authentication)
 
-従って初めてアプリケーションをデプロイする際には、一度だけローカルで terraform コマンドを実行して必要なAWSリソースをプロビジョニングする必要があります。
-このためのリソース定義は `terraform/bootstrap/{shared, dev, prod}/main.tf` ファイルに記載されていますが、AWSをクラウドプロバイダーとして利用するためには、リソースをプロビジョニングしたい対象のAWSアカウントで terraform による操作を許可する操作（認証）が必須となります。
+Therefore, when deploying the application for the first time, you need to run terraform commands locally once to provision the necessary AWS resources.
+The resource definitions for this are described in the `terraform/bootstrap/{shared, dev, prod}/main.tf` files, but to use AWS as a cloud provider, authentication (allowing terraform operations on the target AWS account) is essential.
 
 ```terraform
 terraform {
   required_version = "1.10.4"
 
-  # 必要なプロバイダーの種類とバージョンを指定
+  # Specify the required provider types and versions
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -303,60 +302,60 @@ terraform {
   }
 }
 
-# AWSプロバイダーの設定（内部敵に `AWS_ACCESS_KEY_ID` や `AWS_SECRET_ACCESS_KEY` などを読み込み）
+# AWS provider configuration (internally reads `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, etc.)
 provider "aws" {}
 ...
 ```
 
-terraform のAWSプロバイダーを認証する方法はいくつかありますが、本リポジトリでは[特定の環境変数を設定することで認証](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#environment-variables)を行っています。具体的には以下の３つの環境変数を `environments/terraform.env` に指定しており、これを `environments/dev/docker-compose.yaml` で参照することで `terraform` サービスのDockerコンテナ内で環境変数を使用可能にしています。
+There are several ways to authenticate the terraform AWS provider, but this repository uses [authentication by setting specific environment variables](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#environment-variables). Specifically, the following three environment variables are specified in `environments/terraform.env`, which are referenced in `environments/dev/docker-compose.yaml` to make the environment variables available in the Docker container for the `terraform` service:
 
  - `AWS_ACCESS_KEY_ID`
  - `AWS_SECRET_ACCESS_KEY`
- - `AWS_SESSION_TOKEN`（オプション。一時クレデンシャルを使用する際には指定必須）
+ - `AWS_SESSION_TOKEN` (Optional. Required when using temporary credentials)
 
 > [!Note]
-> `environments/terraform.env` にはもう一つ `AWS_DEFAULT_REGION` という環境変数が記載されていますが、これはリソースをプロビジョニングするリージョンの指定のために使用されています。AWSプロバイダーを使用している際には、[AWSのリージョン情報が terraform の Data Source として取得可能になる](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region)ため、外部から明示的に与えています。
+> There is one more environment variable listed in `environments/terraform.env` - `AWS_DEFAULT_REGION`. This is used to specify the region where resources will be provisioned. When using the AWS provider, [AWS region information becomes available as a terraform Data Source](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/region), so we provide it explicitly from the outside.
 
-上記の認証キーを取得する方法はいくつかあります。しかし、[AWS公式のガイドライン](https://docs.aws.amazon.com/ja_jp/IAM/latest/UserGuide/security-creds.html)では有効期限付きの一時クレデンシャルを使用することを推奨しているため、可能であれば有効期限の無い静的クレデンシャルであるアクセスキーの発行による認証ではなく、一時クレデンシャルによる認証を行うことを検討してください。
+There are several ways to obtain these authentication keys. However, [AWS official guidelines](https://docs.aws.amazon.com/IAM/latest/UserGuide/security-creds.html) recommend using temporary credentials with an expiration date, so consider using authentication with temporary credentials rather than static credentials (access keys with no expiration date) if possible.
 
-ここでは趣旨とずれるため認証キーの具体的な取得方法については記載しませんが、参考になる記事のリンクを掲載しておきます。
+Since it's outside the scope of this document, we won't describe the specific methods for obtaining authentication keys, but here are some reference links:
 
-- 静的クレデンシャル
+- Static credentials
 
-   - [【AWS】aws cliの設定方法 - アクセスキーの発行](https://zenn.dev/akkie1030/articles/aws-cli-setup-tutorial#%E3%82%A2%E3%82%AF%E3%82%BB%E3%82%B9%E3%82%AD%E3%83%BC%E3%81%AE%E7%99%BA%E8%A1%8C)
+   - [Setting up AWS CLI - Issuing access keys](https://zenn.dev/akkie1030/articles/aws-cli-setup-tutorial#%E3%82%A2%E3%82%AF%E3%82%BB%E3%82%B9%E3%82%AD%E3%83%BC%E3%81%AE%E7%99%BA%E8%A1%8C)
 
-- 一時クレデンシャル
+- Temporary credentials
 
-   - [アクセスキーを使わずに、AWS CLIを利用する](https://qiita.com/Uminchu618/items/8e2791ed72a107f59cec)
-      - 最小権限のIAMユーザーから必要な権限を持つIAMロールをAssumeRoleするやり方です
-   - [アクセスキーを使ったaws-cliはもうやめよう！](https://qiita.com/s_moriyama/items/14b703cc0dfa91a6f464)
-      - IAM Identity Centerを使うやり方です
+   - [Using AWS CLI without access keys](https://qiita.com/Uminchu618/items/8e2791ed72a107f59cec)
+      - This approach uses AssumeRole from a minimal IAM user to an IAM role with the necessary permissions
+   - [Let's stop using access keys with aws-cli!](https://qiita.com/s_moriyama/items/14b703cc0dfa91a6f464)
+      - This approach uses IAM Identity Center
 
-### GitHub Actions ワークフロー実行時
+### During GitHub Actions Workflow Execution
 
-GitHub Actionsのワークフロー上で terraform コマンドを実行する場合は、 GitHub Actions のワークフローの実行環境で terraform によるリソースプロビジョニングを認証する必要があります。この場合も、最も簡単な方法として有効期間の長いアクセスキーを GitHub Secret に記載して使用する方法が考えられますが、前述の通り有効期間の長い認証キーを使用するのはセキュリティ上のリスクがあります。従って本プロジェクトでは、複数サービス間でアイデンティティ連携を可能にするプロトコルであるOpenAI Connect(OIDC)を使用して、一時クレデンシャルによる認証を行っています。この方法は[GitHubの公式ドキュメント](https://docs.github.com/ja/enterprise-cloud@latest/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services)にも記載があり、一般的に GitHub Actions のワークフロー内でクラウドプロバイダーと連携する際のベストプラクティスとして知られています。
+When executing terraform commands on a GitHub Actions workflow, authentication is needed to allow resource provisioning by terraform in the GitHub Actions workflow execution environment. In this case, the simplest method would be to use long-lived access keys stored in GitHub Secrets, but as mentioned earlier, using long-lived authentication keys poses security risks. Therefore, this project uses OpenID Connect (OIDC), a protocol that enables identity federation between multiple services, to authenticate with temporary credentials. This method is documented in the [GitHub official documentation](https://docs.github.com/en/enterprise-cloud@latest/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-amazon-web-services) and is generally known as a best practice for integrating with cloud providers in GitHub Actions workflows.
 
-OIDCを使った認証では、以下のような手順で AWS 側が一時クレデンシャルを発行します。
+With OIDC authentication, AWS issues temporary credentials through the following steps:
 
-1. AWS側で GitHub Actions 上で使用する予定のIAMロールを作成する。今回の場合は、ローカルでの terraform 実行(`terraform/bootstrap/shared`)によって実行済み
+1. Create an IAM role on AWS to be used in GitHub Actions. In this case, it has already been executed through local terraform execution (`terraform/bootstrap/shared`).
 
-2. 1.で作成したIAMロールに対して、信頼できる連携先のIdentity Provider(今回の場合はGitHub)の情報を信頼ポリシーとしてアタッチしておく。今回の場合は、ローカルでの terraform 実行(`terraform/bootstrap/shared`)によって実行済み
+2. Attach a trust policy with information about the trusted Identity Provider (in this case, GitHub) to the IAM role created in step 1. In this case, it has already been executed through local terraform execution (`terraform/bootstrap/shared`).
 
    ```terraform
-   # 対応するリソース定義 @terraform/modules/gha-iam/main.tf
+   # Corresponding resource definition @terraform/modules/gha-iam/main.tf
 
-   # 連携先のIdentity Providerの情報（今回はGitHub）
+   # Information about the Identity Provider to federate with (GitHub in this case)
    resource "aws_iam_openid_connect_provider" "github_actions" {
       url             = "https://token.actions.githubusercontent.com"
       client_id_list  = ["sts.amazonaws.com"]
       thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1"]
    }
 
-   # GitHub Actions 上で使用するIAMロール
+   # IAM role to use in GitHub Actions
    resource "aws_iam_role" "github_actions" {
       name = "${var.project_name}-github-actions-role"
 
-      # Identity Providerを信頼するポリシー
+      # Policy that trusts the Identity Provider
       assume_role_policy = jsonencode({
          Version = "2012-10-17"
          Statement = [
@@ -382,11 +381,11 @@ OIDCを使った認証では、以下のような手順で AWS 側が一時ク�
    }
    ```
 
-3. GitHub Actions のワークフロー上から Identity Provider である GitHub にOIDCトークンの発行を依頼
-4. 発行されたOIDCトークンとともにワークフロー上で一時的に使用したいIAMロール（1.で作成したIAMロール）を指定してAWSにリクエストを送り、対象ロールを使用するための一時クレデンシャルの発行を依頼
+3. Request an OIDC token from GitHub, which is the Identity Provider, from the GitHub Actions workflow.
+4. Send a request to AWS with the issued OIDC token and the IAM role (created in step 1) that you want to use temporarily in the workflow, requesting temporary credentials to use the target role.
 
    ```yaml
-   # 対応するワークフロー定義 @.github/workflows/deploy.yml
+   # Corresponding workflow definition @.github/workflows/deploy.yml
    ...
    - name: Configure AWS credentials
       id: credentials
@@ -399,10 +398,10 @@ OIDCを使った認証では、以下のような手順で AWS 側が一時ク�
    ...
    ```
 
-5. 得られた一時クレデンシャルを使って terraform コマンドを実行
+5. Execute terraform commands using the obtained temporary credentials.
 
    ```yaml
-   # 対応するワークフロー定義 @.github/workflows/terraform-reusable.yml
+   # Corresponding workflow definition @.github/workflows/terraform-reusable.yml
    ...
    - name: Boot up terraform container
       run: |
@@ -419,7 +418,7 @@ OIDCを使った認証では、以下のような手順で AWS 側が一時ク�
       run: docker compose exec -T terraform terraform -chdir=environments apply -auto-approve tfplan
    ```
 
-以下に GitHub Actions ワークフローにおける、 OIDC を使った AWS の認証フローのシーケンス図を載せておきます。
+Here's a sequence diagram of the AWS authentication flow using OIDC in the GitHub Actions workflow:
 
 ```mermaid
 sequenceDiagram
@@ -430,19 +429,19 @@ sequenceDiagram
     participant STS as AWS Security Token Service(STS)
     participant AWS as AWS Resources
 
-    Note over GHIDP: GitHubがIdP<br/>（OIDCプロバイダー）として機能
+    Note over GHIDP: GitHub functions as IdP<br/>(OIDC provider)
 
-    GHWF->>GHIDP: (1) OIDCトークンのリクエスト
-    GHIDP-->>GHWF: (2) OIDCトークンを発行・返却
+    GHWF->>GHIDP: (1) Request OIDC token
+    GHIDP-->>GHWF: (2) Issue and return OIDC token
 
-    GHWF->>STS: (3) AssumeRoleWithWebIdentity API呼び出し<br/>(OIDCトークン, AssumeしたいIAMロールのARN等を送信)
+    GHWF->>STS: (3) Call AssumeRoleWithWebIdentity API<br/>(Send OIDC token, ARN of IAM role to assume, etc.)
 
-    Note over STS: ここからSTS内部で<br/>トークンの検証が行われる
-    STS->>STS: (3.1) 受け取ったOIDCトークンを検証<br/>・JWTの署名部分を確認してペイロードに改ざんが無いか確認<br/>有効期限(exp)が切れていないかをチェック
-    STS->>STS: (3.2) 対象ロールの信頼ポリシーを確認<br/>・Issuer(iss)がGitHubであることをチャック<br/>・Subject(sub)やAudience(aud)が条件を満たすかをチェック
+    Note over STS: Token validation happens<br/>internally in STS now
+    STS->>STS: (3.1) Validate received OIDC token<br/>・Check signature part of JWT to ensure payload hasn't been tampered with<br/>・Check that expiration time (exp) isn't expired
+    STS->>STS: (3.2) Check target role's trust policy<br/>・Verify that Issuer (iss) is GitHub<br/>・Check that Subject (sub) and Audience (aud) meet conditions
 
-    STS-->>GHWF: (4) 一時的なクレデンシャルを返却<br/>（AccessKeyID, SecretAccessKey, SessionToken, 有効期限など）
+    STS-->>GHWF: (4) Return temporary credentials<br/>(AccessKeyID, SecretAccessKey, SessionToken, expiration time, etc.)
 
-    GHWF->>AWS: (5) (4)で取得した一時クレデンシャルを使用し、<br/>AWSリソースへアクセス
-    AWS-->>GHWF: (6) AWSリソースからの応答（処理結果）
+    GHWF->>AWS: (5) Access AWS resources using<br/>temporary credentials obtained in (4)
+    AWS-->>GHWF: (6) Response from AWS resources (processing results)
 ```
