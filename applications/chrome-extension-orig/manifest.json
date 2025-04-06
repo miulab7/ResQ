@@ -1,9 +1,9 @@
 {
     "manifest_version": 3,
     "name": "ResQ",
-    "version": "1.0",
+    "version": "10.0",
     "description": "AI-powered reply editor for Gmail",
-    "permissions": ["storage", "activeTab", "scripting", "tabs", "windows"],
+    "permissions": ["storage", "activeTab", "windows"],
     "content_scripts": [
         {
         "matches": ["*://mail.google.com/*"],

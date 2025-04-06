@@ -42,14 +42,14 @@ let customization = {
     length: "",
     purpose: "",
     additional_request: ""
-};
+}
 
 let selectedOptions = [];
 let thisReplyEditorTabId = 0;
 let contentTabId = 0;
 
 // -----------------------
-// Utility Functions
+// utility functions
 // -----------------------
 const getElement = id => document.getElementById(id);
 
@@ -80,7 +80,7 @@ const getJapanTimeFormatted = () => {
     return now.toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' });
 };
 
-const getFormattedTime = timeZone => {
+const getFormattedTime = (timeZone) => {
     const now = new Date();
     return timeZone ? now.toLocaleString('en-US', { timeZone: timeZone }) : now.toLocaleString('en-US');
 };
@@ -119,19 +119,19 @@ function updateFromRequest(request) {
     email_information = request.email_information;
     contentTabId = request.contentTabId;
 
-    // Update UI elements
+    // UI更新
     updateElementText(elements.subject, 'Subject: ' + email_information.title);
     updateElementText(elements.to, 'Sender: ' + email_information.sender);
     updateElementText(elements.receiveTime, 'Received Time: ' + email_information.receive_time);
     document.title = email_information.title;
     updateElementHTML(elements.highlightedMessageDiv, email_information.html);
 
-    // Update user information if provided
+    // 更新: ユーザ情報
     if (request.personalInformation) {
         Object.assign(personalInformation, request.personalInformation);
     }
 
-    // Control display of previous correspondence
+    // 過去のやり取りの表示制御
     const pastEl = getElement('originalMessagePast');
     const pastBtn = getElement('originalMessagePastButton');
     if (!email_information.past_html || /^<br\s*\/?>$/.test(email_information.past_html)) {
@@ -139,7 +139,7 @@ function updateFromRequest(request) {
         toggleDisplay(pastBtn, 'none');
     } else {
         updateElementHTML(pastEl, `<div class="email-content">${email_information.past_html}</div>`);
-        toggleDisplay(pastEl, 'none'); // Initially hidden
+        toggleDisplay(pastEl, 'none'); // 初期状態は非表示
     }
 }
 
@@ -157,7 +157,8 @@ async function generateQuestions(email_information, personalInformation, customi
         if (result.otherInfo) personalInformation.otherInfo = result.otherInfo;
 
         chrome.runtime.sendMessage({
-            action: 'generate_questions'
+        action: 'generate_questions',
+        // conversationHistory: conversationHistory,
         });
     } catch (error) {
         console.error(error);
@@ -177,8 +178,9 @@ async function generateReply(email_information, customization, personalInformati
         if (result.role) personalInformation.role = result.role;
         if (result.signature) personalInformation.signature = result.signature;
         if (result.otherInfo) personalInformation.otherInfo = result.otherInfo;
+
         if (!result.signature) {
-            personalInformation.signature =
+        personalInformation.signature =
             "------------------------------------------" + "<br>" +
             personalInformation.fullName + "<br>" +
             personalInformation.affiliation + "<br>" +
@@ -187,10 +189,10 @@ async function generateReply(email_information, customization, personalInformati
         }
 
         chrome.runtime.sendMessage({
-        action: 'generateReply',
-        selected_choices: selectedChoices,
-        customization: customization,
-        current_reply: replyBoxValue,
+            action: 'generateReply',
+            selected_choices: selectedChoices,
+            customization: customization,
+            current_reply: replyBoxValue,
         });
 
         console.log(selectedChoices);
@@ -286,9 +288,9 @@ function createNewOptionAddContainer(question, optionContainer) {
 
     addOptionButton.addEventListener('click', () => {
         if (newOptionInput.value.trim() !== '') {
-            const newOptionButton = createOptionButton(question, newOptionInput.value);
-            optionContainer.appendChild(newOptionButton);
-            newOptionButton.click();
+        const newOptionButton = createOptionButton(question, newOptionInput.value);
+        optionContainer.appendChild(newOptionButton);
+        newOptionButton.click();
         }
         newOptionInput.value = '';
     });
@@ -296,16 +298,16 @@ function createNewOptionAddContainer(question, optionContainer) {
     return newOptionAddContainer;
 }
 
-// Example click event handler
+// クリックイベントハンドラ例
 function handleOptionClick(event) {
     const button = event.target;
     const questionText = button.getAttribute('data-question-text');
     const selectedOption = button.getAttribute('data-option-index');
 
-    // Check if an entry for this question already exists
+    // すでにこの質問のエントリがあるか検索
     let questionEntry = selectedOptions.find(entry => entry.question === questionText);
     if (!questionEntry) {
-      // If not, create a new entry and add it
+        // なければ新規作成して追加
         questionEntry = {
             question: questionText,
             choices: []
@@ -313,7 +315,7 @@ function handleOptionClick(event) {
         selectedOptions.push(questionEntry);
     }
 
-    // Remove if already selected; add if not selected
+    // 選択済みなら削除、未選択なら追加
     const index = questionEntry.choices.indexOf(selectedOption);
     if (index > -1) {
         questionEntry.choices.splice(index, 1);
@@ -324,6 +326,7 @@ function handleOptionClick(event) {
     }
     console.log(selectedOptions);
 }
+
 
 function lineCorrespondingPart(questionObj, mailcontent_html, i) {
     const correspondinghtml = questionObj.corresponding_part;
@@ -346,12 +349,12 @@ function activateEventListeners(questionDiv, questionContainers, highlightedPart
     const textElements = document.querySelectorAll('.line');
     textElements.forEach((textElement) => {
         if (textElement.id === uniqueId) {
-            questionDiv.addEventListener('click', () => {
-                handleQuestionClick(questionDiv, questionContainers, textElement);
-            });
-            textElement.addEventListener('click', () => {
-                handleQuestionClick(questionDiv, questionContainers, textElement);
-            });
+        questionDiv.addEventListener('click', () => {
+            handleQuestionClick(questionDiv, questionContainers, textElement);
+        });
+        textElement.addEventListener('click', () => {
+            handleQuestionClick(questionDiv, questionContainers, textElement);
+        });
         }
     });
 }
@@ -360,7 +363,7 @@ function handleQuestionClick(questionDiv, questionContainers, textElement) {
     questionContainers.forEach((qd) => {
         qd.classList.remove('qd-selected');
         qd.querySelectorAll('.option-container button').forEach((button) => {
-            button.classList.remove('collapse');
+        button.classList.remove('collapse');
         });
         qd.querySelector('.new-option-container').classList.add('collapse');
     });
@@ -376,11 +379,11 @@ function handleQuestionClick(questionDiv, questionContainers, textElement) {
 
     questionContainers.forEach((qd) => {
         if (qd !== questionDiv) {
-            qd.querySelectorAll('.option-container button').forEach((button) => {
-                if (!button.classList.contains('selected')) {
-                    button.classList.add('collapse');
-                }
-            });
+        qd.querySelectorAll('.option-container button').forEach((button) => {
+            if (!button.classList.contains('selected')) {
+            button.classList.add('collapse');
+            }
+        });
         }
     });
 
@@ -398,7 +401,7 @@ function levenshtein(a, b) {
     }
     for (i = 1; i <= b.length; i++) {
         for (j = 1; j <= a.length; j++) {
-        matrix[i][j] = b.charAt(i - 1) === a.charAt(j - 1)
+            matrix[i][j] = b.charAt(i - 1) === a.charAt(j - 1)
             ? matrix[i - 1][j - 1]
             : Math.min(
                 matrix[i - 1][j - 1] + 1,
@@ -418,12 +421,12 @@ function findTagBoundaries(str) {
         boundaries.push([match.index, match.index + match[0].length]);
     }
     return boundaries;
-}
+    }
 
-function isWithinTag(index, tagBoundaries) {
+    function isWithinTag(index, tagBoundaries) {
     for (let boundary of tagBoundaries) {
         if (index >= boundary[0] && index < boundary[1]) {
-        return true;
+            return true;
         }
     }
     return false;
@@ -439,15 +442,15 @@ function findMostSimilarSubstring(a, b) {
     const tagBoundaries = findTagBoundaries(a);
     for (let len = len_start; len <= b.length + 5; len++) {
         for (let i = 0; i < a.length - len + 1; i++) {
-            if (isWithinTag(i, tagBoundaries) || isWithinTag(i + len - 1, tagBoundaries)) {
+        if (isWithinTag(i, tagBoundaries) || isWithinTag(i + len - 1, tagBoundaries)) {
             continue;
-            }
-            const substring = a.substr(i, len);
-            const distance = levenshtein(substring, b);
-            if (distance < minDistance) {
-                minDistance = distance;
-                mostSimilarSubstringIndices = [i, i + len];
-            }
+        }
+        const substring = a.substr(i, len);
+        const distance = levenshtein(substring, b);
+        if (distance < minDistance) {
+            minDistance = distance;
+            mostSimilarSubstringIndices = [i, i + len];
+        }
         }
     }
     return mostSimilarSubstringIndices;
@@ -456,19 +459,20 @@ function findMostSimilarSubstring(a, b) {
 function getLocalStorage(keys) {
     return new Promise((resolve, reject) => {
         chrome.storage.local.get(keys, function (result) {
-            if (chrome.runtime.lastError) {
-                reject(chrome.runtime.lastError);
-            } else {
-                resolve(result);
-            }
+        if (chrome.runtime.lastError) {
+            reject(chrome.runtime.lastError);
+        } else {
+            resolve(result);
+        }
         });
     });
 }
 
-// --- Optional: Periodic message sending (use if necessary) ---
+// --- Optional: 定期的なメッセージ送信（必要に応じて利用） ---
 setInterval(() => {
-    chrome.runtime.sendMessage("Any message");
+    chrome.runtime.sendMessage("何でも良いメッセージ");
 }, 25 * 1000);
+
 
 // -----------------------
 // Message Handlers
@@ -478,12 +482,13 @@ const handleReflectMessage = request => {
     updateFromRequest(request);
     setDisabled(elements.regenerateQuestionsButton, true);
     setDisabled(elements.generateReplyButton, true);
-    // Start generating questions
+    // 質問生成を開始
     generateQuestions(email_information, personalInformation, customization);
 };
 
 const handleReflectQuestion = request => {
     console.log(request.question);
+    // const questionData = JSON.parse(request.question);
     const questionData = request.question;
     console.log(questionData);
     makeQuestionContainer(questionData.questions);
@@ -503,11 +508,12 @@ const handleFinishGenerateReply = () => {
 };
 
 const handleNoContentTab = () => {
-    alert("Gmail reply box not found. Please copy and use the reply.");
+    alert("Gmailの返信ボックスが見つかりませんでした。返信をコピーして使用してください。");
 };
 
 const handleReflectReply = request => {
     console.log(request.messageContent);
+    // const first_value = Object.values(request.messageContent)[0];
     elements.replyBox.value += request.messageContent;
 };
 
@@ -529,29 +535,29 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
     if (thisReplyEditorTabId === request.replyEditorTabId) {
         switch (request.action) {
-            case 'ReflectMessage':
-                handleReflectMessage(request);
-                break;
-            case 'ReflectQuestion':
-                handleReflectQuestion(request);
-                break;
-            case 'finish_generate_reply':
-                handleFinishGenerateReply();
-                break;
-            case 'noContentTab':
-                handleNoContentTab();
-                break;
-            case 'reflectReply':
-                handleReflectReply(request);
-                break;
-            case 'showNotification':
-                handleShowNotification(request);
-                break;
-            case 'ProgressUpdate':
-                handleProgressUpdate(request);
-                break;
-            default:
-                break;
+        case 'ReflectMessage':
+            handleReflectMessage(request);
+            break;
+        case 'ReflectQuestion':
+            handleReflectQuestion(request);
+            break;
+        case 'finish_generate_reply':
+            handleFinishGenerateReply();
+            break;
+        case 'noContentTab':
+            handleNoContentTab();
+            break;
+        case 'reflectReply':
+            handleReflectReply(request);
+            break;
+        case 'showNotification':
+            handleShowNotification(request);
+            break;
+        case 'ProgressUpdate':
+            handleProgressUpdate(request);
+            break;
+        default:
+            break;
         }
     }
 });
@@ -572,7 +578,7 @@ const onGenerateReplyClick = () => {
 
     scrollIntoViewSmooth(elements.finalizeButton);
 
-    // generateReply is defined as an asynchronous function (passing all necessary information as arguments)
+    // generateReply は非同期関数として定義（ここでは引数として各情報を渡す）
     generateReply(email_information, customization, personalInformation, selectedOptions, replyBoxValue, elements);
 };
 

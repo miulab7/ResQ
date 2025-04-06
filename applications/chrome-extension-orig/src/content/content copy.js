@@ -2,20 +2,22 @@
 console.log('content.js loaded');
 
 // -------------------------------------------------
-// Constants (Common settings such as selectors)
+// 定数（セレクタなどの共通設定）
 // -------------------------------------------------
 const SELECTORS = {
-  replyBox: 'div.Am.aO9.Al.editable.LW-avf',
-  originalContent: 'div.adn.ads > div.gs > div:nth-child(3) > div:nth-child(3) > div',
-  aiButtonContainer: 'tr.btC',
-  subject: 'h2.hP',
-  sender: 'span.gD',
-  receiveTime: 'span.g3',
-  emailContainer: 'div.Bk'
+    replyBox: 'div.Am.aO9.Al.editable.LW-avf',
+    originalContent: 'div.adn.ads > div.gs > div:nth-child(3) > div:nth-child(3) > div',
+    aiButtonContainer: 'tr.btC',
+    subject: 'h2.hP',
+    sender: 'span.gD',
+    receiveTime: 'span.g3',
+    emailContainer: 'div.Bk'
 };
 
+
+
 // -------------------------------------------------
-// Global Variables
+// グローバル変数
 // -------------------------------------------------
 let thisContentTabId = null;
 let originalContentHTML = null;
@@ -24,81 +26,81 @@ let isListenerAdded = false;
 let thisReplyBox = null;
 let clickedEmail = null;
 
-// -------------------------------------------------
-// Utility Functions
-// -------------------------------------------------
 
-// HTML filtering function
-// Removes all attributes from the input HTML string and inserts line breaks appropriately for specific tags (br, div, p, pre, hr)
+// -------------------------------------------------
+// ユーティリティ関数
+// -------------------------------------------------
+// HTML フィルタリング関数
+// 入力された HTML 文字列から全属性を削除し、特定のタグ（br, div, p, pre, hr）の場合は適宜改行を挿入する
 const filterHTML = inputHTML => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(inputHTML, 'text/html');
   const allElements = doc.body.getElementsByTagName('*');
-  // Remove all attributes from every element
+  // すべての属性を削除
   for (let element of allElements) {
-    while (element.attributes.length > 0) {
+      while (element.attributes.length > 0) {
       element.removeAttribute(element.attributes[0].name);
-    }
+      }
   }
   let result = [];
   const walker = document.createTreeWalker(
-    doc.body,
-    NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
-    {
+      doc.body,
+      NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT,
+      {
       acceptNode: node => {
-        if (node.nodeType === Node.ELEMENT_NODE) {
+          if (node.nodeType === Node.ELEMENT_NODE) {
           const tag = node.tagName.toLowerCase();
           if (['br', 'div', 'p', 'pre', 'hr'].includes(tag)) {
-            return NodeFilter.FILTER_ACCEPT;
+              return NodeFilter.FILTER_ACCEPT;
           }
-        } else if (node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== '') {
+          } else if (node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== '') {
           return NodeFilter.FILTER_ACCEPT;
-        }
-        return NodeFilter.FILTER_SKIP;
+          }
+          return NodeFilter.FILTER_SKIP;
       }
-    }
+      }
   );
   while (walker.nextNode()) {
-    if (walker.currentNode.nodeType === Node.ELEMENT_NODE) {
+      if (walker.currentNode.nodeType === Node.ELEMENT_NODE) {
       const tag = walker.currentNode.tagName.toLowerCase();
       if (tag === 'br' || tag === 'hr') {
-        result.push(`<${tag}>`);
+          result.push(`<${tag}>`);
       } else {
-        // For div, p, pre tags, insert a line break before the element if not already present
-        if (result[result.length - 1] !== '<br>') {
+          // div, p, pre の場合、前に改行を入れる
+          if (result[result.length - 1] !== '<br>') {
           result.push('<br>');
-        }
+          }
       }
-    } else if (walker.currentNode.nodeType === Node.TEXT_NODE) {
+      } else if (walker.currentNode.nodeType === Node.TEXT_NODE) {
       result.push(walker.currentNode.textContent);
-    }
+      }
   }
   if (result[0] === '<br>') result.shift();
   result.push('<br>');
   return result.join('');
 };
 
-// Removes any child elements within the specified selector that have white text color
+// 指定したセレクタ内の全子要素のうち、文字色が白の場合に削除する
 const removeWhiteText = selector => {
   const elems = document.querySelectorAll(selector + ' *');
   elems.forEach(el => {
-    if (window.getComputedStyle(el).color === 'rgb(255, 255, 255)') {
+      if (window.getComputedStyle(el).color === 'rgb(255, 255, 255)') {
       el.remove();
-    }
+      }
   });
 };
 
-// Placeholder: Re-fetch the original email content from the DOM
-// Implement any necessary logic here. This example always returns success.
+// プレースホルダー：DOM内から元メールの内容を再取得する処理
 async function findOriginalContent() {
-  return { error: false };
+// 必要に応じた処理を実装してください。ここでは常に成功とする例です。
+return { error: false };
 }
 
 // -------------------------------------------------
-// Create AI Button and Handle Click Events
+// AIボタン作成とクリック時処理
 // -------------------------------------------------
 
-// Generates and returns the AI button
+// AIボタンを生成して返す
 function createAIButton() {
   const tdElement = document.createElement('td');
   tdElement.className = 'td-aiButton';
@@ -121,9 +123,9 @@ function createAIButton() {
   return tdElement;
 }
 
-// Click event handler: Extracts email content and sends it to the background process
+// クリック時の処理：メール内容を抽出して、バックグラウンドに送信
 function handleAIButtonClick() {
-  // Request to store the tab ID
+  // タブIDの保存を依頼
   try {
     chrome.runtime.sendMessage({ action: 'storeContentTabId' }, (response) => {
       thisContentTabId = response.contentTabId;
@@ -134,11 +136,11 @@ function handleAIButtonClick() {
   }
 
   try {
-    // Retrieve the nearest email container to the clicked button
+    // クリックされたボタンの最も近いメールコンテナを取得
     clickedEmail = this.closest(SELECTORS.emailContainer);
     if (!clickedEmail) throw new Error("Failed to find email container");
 
-    // Get the elements containing the email body
+    // メール本文部分の要素群を取得
     const originalContentElements = clickedEmail.querySelectorAll(SELECTORS.originalContent);
     thisReplyBox = clickedEmail.querySelector(SELECTORS.replyBox);
 
@@ -146,7 +148,7 @@ function handleAIButtonClick() {
     const senderElement = clickedEmail.querySelector(SELECTORS.sender);
     const receiveTimeElement = clickedEmail.querySelector(SELECTORS.receiveTime);
 
-    // If multiple elements exist, choose the one that does not have the 'yj6qo' class
+    // 複数存在する場合、特定の要素を選ぶ（yj6qoクラスがないもの）
     let contentIndex = 0;
     for (let i = 0; i < originalContentElements.length; i++) {
       if (!originalContentElements[i].classList.contains('yj6qo')) {
@@ -154,14 +156,14 @@ function handleAIButtonClick() {
       }
     }
 
-    // Remove unnecessary white text elements
+    // 不要な白文字などを削除
     removeWhiteText();
 
-    // Create a clone of the target content element
+    // 対象の本文要素のクローンを作成
     const originalContentElement = originalContentElements[contentIndex];
     const cloneDiv = originalContentElement.cloneNode(true);
 
-    // Extract and remove elements representing past email exchanges (e.g., div.h5 or div.im)
+    // 過去のやり取り（例：div.h5 または div.im）の要素を抽出し、削除
     let pastElements = cloneDiv.querySelectorAll('div.h5');
     if (pastElements.length === 0) {
       pastElements = cloneDiv.querySelectorAll('div.im');
@@ -172,7 +174,7 @@ function handleAIButtonClick() {
     const originalContentText = cloneDiv.innerText;
     originalContentPastHTML = filterHTML(Array.from(pastElements).map(el => el.outerHTML).join('')).replace(/\s|&nbsp;/g, ' ');
 
-    // Send a message to the background process to open the editor with the extracted email content
+    // バックグラウンドへエディタ起動のためのメッセージ送信
     chrome.runtime.sendMessage({
       action: 'openEditor',
       email_information: {
@@ -192,7 +194,7 @@ function handleAIButtonClick() {
 }
 
 // -------------------------------------------------
-// Automatically Add AI Button Using MutationObserver
+// MutationObserverでAIボタンを自動追加
 // -------------------------------------------------
 function addAIButtonObserver() {
   const observer = new MutationObserver(() => {
@@ -208,7 +210,7 @@ function addAIButtonObserver() {
 }
 
 // -------------------------------------------------
-// Register Chrome Runtime Message Listener
+// Chromeランタイムメッセージリスナーの登録
 // -------------------------------------------------
 function addMessageListener() {
   if (!isListenerAdded) {
@@ -239,7 +241,7 @@ function addMessageListener() {
 }
 
 // -------------------------------------------------
-// Initialization
+// 初期化
 // -------------------------------------------------
 window.addEventListener('load', () => {
   addAIButtonObserver();
