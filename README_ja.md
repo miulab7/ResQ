@@ -3,8 +3,7 @@
 [![Ascender Supported](https://img.shields.io/badge/Supported%20by-Ascender-blue)](https://github.com/cvpaperchallenge/Ascender)
 [![arXiv](https://img.shields.io/badge/arXiv-2502.03804-b31b1b.svg)](https://arxiv.org/abs/2502.03804)
 [![ACM CHI 2025](https://img.shields.io/badge/CHI-2025-ff69b4.svg)](https://dl.acm.org/doi/abs/10.1145/3706598.3714016)
-[![Slide](https://img.shields.io/badge/Slides-GoogleDocs-blue)](https://drive.google.com/file/d/1WyDnJej7qg7dY5guJ9RiK4cCpMzLbOPI/view?usp=drive_link)
-[![Slide (日本語)](https://img.shields.io/badge/Slides-GoogleDocs-blue)](https://drive.google.com/file/d/1rfmvvnHiKNsInfthDKsiDtQc10Wv-_va/view?usp=sharing)
+[![Slide](https://img.shields.io/badge/Slides-GoogleDrive-blue)](https://drive.google.com/drive/folders/1y0dW3u_MgtR4i_jBRqwPvi7kCZ51udD4?usp=sharing)
 
 ![Teaser Image](docs/images/teaser.gif)
 
