@@ -3,6 +3,8 @@
 [![Ascender Supported](https://img.shields.io/badge/Supported%20by-Ascender-blue)](https://github.com/cvpaperchallenge/Ascender)
 [![arXiv](https://img.shields.io/badge/arXiv-2502.03804-b31b1b.svg)](https://arxiv.org/abs/2502.03804)
 [![ACM CHI 2025](https://img.shields.io/badge/CHI-2025-ff69b4.svg)](https://dl.acm.org/doi/abs/10.1145/3706598.3714016)
+[![Slide](https://img.shields.io/badge/Slides-GoogleDocs-blue)](https://drive.google.com/file/d/1WyDnJej7qg7dY5guJ9RiK4cCpMzLbOPI/view?usp=drive_link)
+[![Slide (日本語)](https://img.shields.io/badge/Slides-GoogleDocs-blue)](https://drive.google.com/file/d/1rfmvvnHiKNsInfthDKsiDtQc10Wv-_va/view?usp=sharing)
 
 ![Teaser Image](docs/images/teaser.gif)
 
@@ -127,7 +129,7 @@ This guide outlines how to quickly spin up ResQ with Docker Compose for local us
 After entering the container, refer to the documentation in each service’s `docs` folder for further setup instructions.
 
 - Backend: [docs/backend.md](./docs/backend.md)
-- Chrome Extension: [docs/chrome-extension.md](./docs/chrome-extension.md)
+- Deployment: [docs/deployment.md](./docs/deployment.md)
 
 5. **Load the Chrome Extension**
    1. Open Google Chrome and go to `chrome://extensions/`.
