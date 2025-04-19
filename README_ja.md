@@ -4,6 +4,7 @@
 [![arXiv](https://img.shields.io/badge/arXiv-2502.03804-b31b1b.svg)](https://arxiv.org/abs/2502.03804)
 [![ACM CHI 2025](https://img.shields.io/badge/CHI-2025-ff69b4.svg)](https://dl.acm.org/doi/abs/10.1145/3706598.3714016)
 [![Slide](https://img.shields.io/badge/Slides-GoogleDrive-blue)](https://drive.google.com/drive/folders/1y0dW3u_MgtR4i_jBRqwPvi7kCZ51udD4?usp=sharing)
+[![YouTube](https://img.shields.io/badge/Watch-YouTube-red)](https://youtu.be/9iH_3AVk3Mc)
 
 ![Teaser Image](docs/images/teaser.gif)
 
